@@ -23,12 +23,13 @@ Note that EQ makes use of the following programs/libraries for sound recording:
 NAudio: http://naudio.codeplex.com/
 Lame: http://lame.sourceforge.net/index.php
 
-The following files should be present in the same directory as the .exe file
+The following files should be present in the same directory as the BHS_questionaire_demo.exe file
 NAudio.dll (known to work with version 1.6.0.0)
 lame.exe (known to work with version 3.99.2.5)
 lame_enc.dll
 
-Lame should be downloaded separately.
+NAudio.dll is included here, but will need to be moved to the Data Directory (see above).
+Lame should be downloaded separately and copied to the Data Directory.
 
 
 
