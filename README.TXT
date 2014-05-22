@@ -18,15 +18,18 @@ must be installed on a computer before using EQ. See this link for more informat
 12. There are a number of files in these directories, but the most important from a user perspective is the file "final_data_<participant-id>.txt".
 13. This file contains the saved data for the questionnaire. Each line is formatted as <Question-code>\t<answer>
 
-Note that EQ makes use of the following programs/libraries for sound recording (which are included here as binary files):
+Note that EQ makes use of the following programs/libraries for sound recording:
 
 NAudio: http://naudio.codeplex.com/
 Lame: http://lame.sourceforge.net/index.php
 
 The following files should be present in the same directory as the .exe file
-NAudio.dll (version 1.6.0.0)
-lame.exe (version 3.99.2.5)
+NAudio.dll (known to work with version 1.6.0.0)
+lame.exe (known to work with version 3.99.2.5)
 lame_enc.dll
+
+Lame should be downloaded separately.
+
 
 
 
