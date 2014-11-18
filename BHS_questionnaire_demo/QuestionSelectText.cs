@@ -222,6 +222,11 @@ namespace BHS_questionnaire_demo
             //trap any keypress to deselect the skip-controls
             selectBox.Click += new EventHandler(button_click);
 
+            //check to see if any of the options are not specimen obtained
+            //selectBox.Click += new EventHandler(button_click_hepc);
+
+            selectBox.SelectionChangeCommitted += new EventHandler(button_click_hepc);
+
             //stop user being able to type in the combobox
             selectBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
@@ -303,6 +308,19 @@ namespace BHS_questionnaire_demo
 
                     selectBox.SelectedItem = previouslySelectedOption;
 
+                    if (Validation == "HepcBloodSample")
+                    {
+
+                        //disable textbox is most cases
+                        if (previouslySelectedOption.getText() != "specimen obtained")
+                        {
+
+                            textbox.Enabled = false;
+
+                        }
+
+                    }
+
                 }
 
 
@@ -332,6 +350,53 @@ namespace BHS_questionnaire_demo
 
             //start audio recording if enabled
             audioRecording();
+
+
+
+        }
+
+        public void button_click_hepc(object sender, EventArgs e)
+        {
+           
+
+            if (Validation == "HepcBloodSample")
+            {
+                //get the selected button
+                Option selectedOption = (Option)(selectBox.SelectedItem);
+
+                if (selectedOption != null)
+                {
+                    string selectedOptionText = selectedOption.getText();
+
+                    if (selectedOptionText == "specimen obtained")
+                    {
+
+                        //enable the text-box
+                        textbox.Enabled = true;
+
+
+
+
+                    }
+                    else
+                    {
+                        //disable the text-box and remove any text
+                        textbox.Text = "";
+                        textbox.Enabled = false;
+
+
+                    }
+
+
+
+
+                }
+
+                
+
+
+
+            }
 
 
 
@@ -381,6 +446,7 @@ namespace BHS_questionnaire_demo
             }
 
             selectedOptionValue = selectedOption.getValue();
+            string selectedOptionText = selectedOption.getText();
 
             //process the selected option
 
@@ -445,6 +511,63 @@ namespace BHS_questionnaire_demo
                 errorMessage = "this barcode does not match the participant ID";
 
                 dataOK = TestSameAsParticipantID(userData);
+
+
+
+            }
+            else if (Validation == "HepcBloodSample")
+            {
+                //same as TestSameAsParticipantID, except only if the barcode has been entered
+
+                errorMessage = "this barcode does not match the participant ID";
+
+                if (string.IsNullOrEmpty(userData))
+                {
+
+                    //error if selected item was "specimen obtained"
+                    if (selectedOptionText == "specimen obtained")
+                    {
+                        //error: must be a barcode in this case
+                        errorMessage = "you must enter a barcode";
+                        dataOK = false;
+
+                    }
+                    else
+                    {
+                        dataOK = true;
+
+
+                    }
+                    
+                    
+
+                }
+                else
+                {
+                    //dataOK = TestSameAsParticipantID(userData);
+
+                    //should be the same as the first ID (entered before questions started)
+
+                    string userID = getQM().getUserID();
+                    
+
+                    if (userID == userData)
+                    {
+                        dataOK = true;
+
+                    }
+                    else
+                    {
+
+                        dataOK = false;
+
+
+                    }
+
+
+                }
+
+                
 
 
 

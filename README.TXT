@@ -1,7 +1,6 @@
 Instructions for building the "EQ" program, for running an Electronic Questionnaire. 
 
-This program has been designed for and run on computers/tablets
-running versions of the Microsoft Windows operating system. It is known to work with Windows XP, Windows 7 and Windows 8. The .Net framework from Microsoft
+This program has been designed for computers/tablets running versions of the Microsoft Windows operating system. It is known to work with Windows XP, Windows 7 and Windows 8. The .Net framework from Microsoft
 must be installed on a computer before using EQ. See this link for more information: http://www.microsoft.com/en-gb/download/details.aspx?id=30653
 
 1. Install Microsoft Visual Studio for Windows Desktop (denoted hereafter as "VS". Note: the free "Express" version works as of this writing, i.e. the 2013 version)
@@ -31,7 +30,11 @@ lame_enc.dll
 NAudio.dll is included here, but will need to be moved to the Data Directory (see above).
 Lame should be downloaded separately and copied to the Data Directory.
 
+The questions shown in a questionnaire are encoded in XML in a file where the file-name contains the questionnaire-name. For each questionnaire there is also a CONF file,
+which contains various other kinds of settings, such as supported languages. For example, the questionniare "Example", would have files EQ_Example.xml, EQ_Example.conf, both in the data directory.
+The file name must be of the format: EQ_<questionnaire name>.xml, EQ_<questionnaire name>.conf
 
+Check the accompanying files: EQ_EXAMPLE.xml, EQ_EXAMPLE.conf
 
 
 1. The usage of a range of years within a copyright statement contained within

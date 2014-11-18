@@ -289,12 +289,32 @@ namespace BHS_questionnaire_demo
             //first year should also be don't know
             selectYears.Items.Add("Don't Know");
 
-            for (int i = currentYear; i >= 1900; i--)
+
+            //special case TestEDD: only allow the current and next year (expected delivery date for preg)
+
+            if (Validation == "TestEDD")
             {
-                selectYears.Items.Add(i);
+                selectYears.Items.Add(currentYear + 1);
+                selectYears.Items.Add(currentYear);
+
 
 
             }
+            else
+            {
+
+                for (int i = currentYear; i >= 1900; i--)
+                {
+                    selectYears.Items.Add(i);
+
+
+                }
+
+
+            }
+
+
+           
 
 
 
@@ -567,6 +587,25 @@ namespace BHS_questionnaire_demo
 
                     //not vover 18
                     ((Form2)getBigMessageBox()).setLabel("This date is after today");
+                    getBigMessageBox().ShowDialog();
+
+                    return Code;
+
+
+                }
+
+
+            }
+
+            else if (Validation == "TestEDD")
+            {
+                //the entered date must be after or on the current date
+
+                if (!isAfterOrOnCurrentDay(selectedDayInt, selectedMonthsInt, selectedYearInt))
+                {
+
+                    
+                    ((Form2)getBigMessageBox()).setLabel("This date is before today");
                     getBigMessageBox().ShowDialog();
 
                     return Code;
@@ -940,6 +979,59 @@ namespace BHS_questionnaire_demo
         }
 
 
+    
+
+
+    private bool isAfterOrOnCurrentDay(int days, int months, int years)
+        {
+
+            //true if the date is After or on the current date
+            
+            
+            //if any of these are 0 we can't do this test, i.e. data uncertain
+
+            if (days == 0 || months == 0 || years == 0)
+            {
+
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't check validity as date uncertain");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+            }
+
+            DateTime today = DateTime.Now.Date;
+
+           
+            DateTime thisDate = new DateTime(years, months, days);
+
+            if (thisDate >= today)
+            {
+
+                return true;
+
+
+            }
+            else
+            {
+                return false;
+
+
+            }
+
+          
+
+        }
+
+
     }
+
+
 }
 

@@ -1059,9 +1059,19 @@ namespace BHS_questionnaire_demo
 
                 else if(Process == "calcBMI:HEPC"){
 
+                    decimal pd = Convert.ToDecimal(userData1);
 
-                    processedData = userData1;
-                    userData = userData1;
+                    //round to 1 decimal place
+                    decimal pdRounded = Math.Round(pd, 1);
+
+                    string pdRoundedStr = pdRounded.ToString();
+
+                    processedData = pdRoundedStr;
+                    userData = pdRoundedStr;
+
+                    //processedData = userData1;
+                    //userData = userData1;
+
                     
                     calcBMIhepC();
                     nextCode = ToCode;

@@ -399,6 +399,36 @@ namespace BHS_questionnaire_demo
 
             }
 
+            else if (Validation == "TestInKnownIDNOset")
+            {
+                //OK if the IDNO is in the set of IDNOs that is included in the .conf file
+                //get config object.
+
+                errorMessage = "Error: this IDNO is not in the allowed set";
+
+                Qconfig q = getQM().getMainForm().config;
+
+                HashSet<string> idnoSet = q.IDNOset;
+
+                if (idnoSet.Contains(userData))
+                {
+                    dataOK = true;
+
+
+                }
+                else
+                {
+                    dataOK = false;
+
+
+                }
+
+
+
+
+
+            }
+
             else if (Validation == "TestSameAsUserID")
             {
                 //the value entered here must match the original user ID entered when the form was created

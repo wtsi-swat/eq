@@ -716,7 +716,7 @@ namespace BHS_questionnaire_demo
             //save data
             thisQ.saveFinalData(fdh);
 
-
+            //MessageBox.Show("Pathscan saved:" + thisQ.Code);
 
             //does the path continue: check the nextcode
             string nextCode = thisQ.NextCode;
@@ -1329,6 +1329,10 @@ namespace BHS_questionnaire_demo
             //save all the current data to a file
             //open a file:
 
+
+            //finalSave = false;
+
+
             //open data files
             System.IO.TextWriter dhProcessedData = null;
             System.IO.TextWriter dhUserData = null;
@@ -1424,6 +1428,8 @@ namespace BHS_questionnaire_demo
 
                         firstQcode = section.getFirstQuestion();
                         thisQ = questionHash[firstQcode];
+
+
 
                         pathScanSave(thisQ, dhFinalData, qSet, section.getSectionTitle());
 
@@ -1521,6 +1527,7 @@ namespace BHS_questionnaire_demo
             //set of all question-codes that have been answered
             HashSet<string> qCodes = new HashSet<string>();
 
+            //StringBuilder sb1 = new StringBuilder();
 
             using (StreamReader dhFinalData = new StreamReader(fileNameFinalData))
             {
@@ -1530,6 +1537,11 @@ namespace BHS_questionnaire_demo
                 while (dhFinalData.EndOfStream == false)
                 {
                     string line = dhFinalData.ReadLine();
+
+                    //sb1.Append(line).Append(", ");
+
+
+
 
                     //using tab as delim
                     string[] parts = line.Split(delim);
@@ -1544,17 +1556,46 @@ namespace BHS_questionnaire_demo
             }
 
 
+            //MessageBox.Show("lines in file:" + sb1);
+
+
+
+            /*
+            StringBuilder sb = new StringBuilder();
+            foreach (string code in qCodes)
+            {
+                sb.Append(code).Append(", ");
+
+
+            }
+
+            MessageBox.Show("used codes:" + sb);
+             */
 
 
             //save
             //System.IO.TextWriter dhFinalDataOut = null;
             //Note: must append data, hense the "true" param
+
+            Question thisQ;
+
             using (TextWriter dhFinalDataOut = new System.IO.StreamWriter(fileNameFinalData, true))
             {
 
                 //list of all questions
                 foreach (string qCode in questionHash.Keys)
                 {
+                    
+                    //skip labels
+                    thisQ = questionHash[qCode];
+
+                    if (thisQ is QuestionLabel)
+                    {
+                        continue;
+
+                    }
+                    
+                    
                     //has this question been answered?
 
                     if (!qCodes.Contains(qCode))

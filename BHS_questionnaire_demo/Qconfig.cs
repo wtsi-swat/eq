@@ -45,8 +45,8 @@ namespace BHS_questionnaire_demo
         public string DontKnowValue { get; set; }
         public string NotApplicableValue { get; set; }
         public string SkippedBMIvalue { get; set; }
-        
-        
+
+        public HashSet<string> IDNOset { get; set; }
         
         private List<string> langList;
         public List<Section> sectionList;
@@ -81,7 +81,12 @@ namespace BHS_questionnaire_demo
         public string selectedCountryName { get; set; }
 
 
+        public HashSet<string> getIDNOset()
+        {
 
+            return IDNOset;
+
+        }
 
         public string getGlobalName(string key)
         {
@@ -133,6 +138,9 @@ namespace BHS_questionnaire_demo
 
             //option sets that are not specific to the selected country
             optionMap = new Dictionary<string, List<Option>>();
+
+            IDNOset = new HashSet<string>();
+
 
 
 
@@ -380,6 +388,14 @@ namespace BHS_questionnaire_demo
 
                     }
 
+                    else if (parts[0] == "IDNO")
+                    {
+
+                        IDNOset.Add(parts[1]);
+
+
+                    }
+
                     else
                     {
 
@@ -520,6 +536,17 @@ namespace BHS_questionnaire_demo
                         case "univ_kwazulu_natal_logo":
 
                             pb.Image = BHS_questionnaire_demo.Properties.Resources.univ_kwazulu_natal_logo;
+
+                            break;
+
+                        case "H3A_logo":
+                            pb.Image = BHS_questionnaire_demo.Properties.Resources.H3A_logo;
+
+                            break;
+
+                        case "WT_logo":
+
+                            pb.Image = BHS_questionnaire_demo.Properties.Resources.WT_logo;
 
                             break;
 

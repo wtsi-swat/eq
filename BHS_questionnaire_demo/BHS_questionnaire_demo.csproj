@@ -233,6 +233,9 @@
     <None Include="Resources\logo_mrc.gif" />
     <None Include="Resources\univ_kwazulu_natal_logo.bmp" />
     <None Include="Resources\univ_kwazulu_natal_logo.png" />
+    <None Include="Resources\H3A_logo.bmp" />
+    <None Include="Resources\H3A logo.jpg" />
+    <None Include="Resources\WT-logo.jpg" />
     <Content Include="test_icon.ico" />
   </ItemGroup>
   <ItemGroup>

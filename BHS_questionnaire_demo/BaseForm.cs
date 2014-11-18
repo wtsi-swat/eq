@@ -604,6 +604,22 @@ namespace BHS_questionnaire_demo
 
             }
 
+
+            //block all non-alphanumeric chars, but allow a dot
+            Match match = Regex.Match(partID, @"^[a-zA-Z0-9.]+$");
+
+            if (! match.Success)
+            {
+                errorBox.setLabel("Error: The Participant ID contains non-alphanumeric character(s), which is not allowed.");
+                errorBox.ShowDialog();
+                return;
+
+
+            }
+
+
+            /*
+
             //check that the partID does not contain any underscore characters (which will cause problems as its gets embedded into dir/file names which use underscores as separators
             if (partID.Contains("_"))
             {
@@ -613,6 +629,7 @@ namespace BHS_questionnaire_demo
                 return;
 
             }
+             */
 
 
             //does this participant already exist (in which case they should be using the existing participant page)?

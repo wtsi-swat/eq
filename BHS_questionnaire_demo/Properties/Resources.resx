@@ -145,4 +145,10 @@
   <data name="univ_kwazulu_natal_logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\univ_kwazulu_natal_logo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="H3A_logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\H3A logo.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WT_logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\WT-logo.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

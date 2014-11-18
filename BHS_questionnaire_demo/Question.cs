@@ -324,6 +324,87 @@ namespace BHS_questionnaire_demo
 
 
                 }
+
+                else if (IfSettingSpecial == "HepcFUV")
+                {
+
+                    string sex = gs.Get("SEX");
+                    string prgnt = gs.Get("PRGNT");
+                    string visit = gs.Get("VISIT6T");
+
+                    if (sex == null || visit == null)
+                    {
+
+                        return false;
+                    }
+
+                    else if (sex == "1")
+                    {
+                        //male
+
+                        //visit must be 1 or 3
+
+                        if (visit == "1" || visit == "3")
+                        {
+                            return true;
+
+                        }
+                        else
+                        {
+                            return false;
+
+                        }
+
+
+
+                    }
+                    else
+                    {
+                        //female
+
+                        //pregnant?
+
+                        if (prgnt == null)
+                        {
+
+                            return false;
+                        }
+                        else if(prgnt == "1")
+                        {
+
+                            //pregnant
+                            return false;
+
+                        }
+                        else
+                        {
+                            
+                            //not pregnant
+                            //visit must be 1 or 3
+
+                            if (visit == "1" || visit == "3")
+                            {
+                                return true;
+
+                            }
+                            else
+                            {
+                                return false;
+
+                            }
+
+
+                        }
+
+
+
+                    }
+
+
+
+
+                }
+
                 else
                 {
 
@@ -1006,7 +1087,7 @@ namespace BHS_questionnaire_demo
             //a radiobutton has been clicked: deselect any of the control buttons (no answer, etc) that might have been selected
             clearControlButtons();
 
-
+           
 
         }
 

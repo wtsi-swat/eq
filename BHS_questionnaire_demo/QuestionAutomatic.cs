@@ -350,7 +350,7 @@ namespace BHS_questionnaire_demo
 
                     Form3 warningBox = getQM().getWarningBox();
 
-                    warningBox.setLabel("Warning: Can't show HWR advice due to missing data");
+                    warningBox.setLabel("Warning: Can't show WHR advice due to missing data");
                     warningBox.ShowDialog();
 
 
