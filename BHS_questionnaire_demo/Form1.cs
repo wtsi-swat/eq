@@ -334,6 +334,37 @@ namespace BHS_questionnaire_demo
 
 
             }
+
+
+            //show any announcements
+            if (config.Announcement != null)
+            {
+
+                if (config.Announcement == "MHPI")
+                {
+
+                    //show participant name
+                    string particName = qm.getAnswer("NAME");
+
+                    string hospNum = qm.getAnswer("HOSP");
+
+                    if (particName != null && hospNum != null)
+                    {
+
+                        
+                        adviceBox.setAdviceText("Participant", "Name: " + particName + "\nHospital Number: " + hospNum);
+                        adviceBox.ShowDialog();
+
+
+                    }
+
+
+
+                }
+
+
+
+            }
             
             
 
@@ -614,6 +645,24 @@ namespace BHS_questionnaire_demo
         }
 
 
+        public void setSpecificSkipControlInvisible(string buttonText)
+        {
+            foreach (RadioButton rb in groupBox1.Controls)
+            {
+
+                if (rb.Text == buttonText)
+                {
+                    rb.Visible= false;
+
+                }
+                
+
+            }
+
+
+        }
+
+
 
 
         public void setSkipSetting(string buttonText)
@@ -866,6 +915,17 @@ namespace BHS_questionnaire_demo
         public void setSkipControlsVisible()
         {
             groupBox1.Visible = true;
+
+            foreach (RadioButton rb in groupBox1.Controls)
+            {
+                rb.Visible = true;
+
+                
+            }
+
+
+
+
 
 
 

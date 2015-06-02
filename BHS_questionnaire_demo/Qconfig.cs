@@ -45,6 +45,7 @@ namespace BHS_questionnaire_demo
         public string DontKnowValue { get; set; }
         public string NotApplicableValue { get; set; }
         public string SkippedBMIvalue { get; set; }
+        public string Announcement { get; set; }
 
         public HashSet<string> IDNOset { get; set; }
         
@@ -265,6 +266,8 @@ namespace BHS_questionnaire_demo
             string opKey;
             string opText;
             string currency;
+            string siteCode;
+            string siteName;
 
 
             try
@@ -360,6 +363,45 @@ namespace BHS_questionnaire_demo
 
                     }
 
+                    else if (parts[0] == "country-site-code")
+                    {
+
+                        countryName = parts[1];
+
+                        //normal format:
+                        //e.g. country-site-code~Uganda~8001
+                        
+                        //in some cases, there is a 4th param which is the name of the site
+                        //e.g. country-site-code~South Africa~6002~Durban
+
+                        siteCode = parts[2];
+
+                        if (parts.Length == 4)
+                        {
+
+                            //siteName = countryName + " (" + parts[3] + ")";
+                            siteName = siteCode + "<" + parts[3] + ">";
+
+                            //5001<Abuja> 
+
+                        }
+                        else
+                        {
+                            siteName = countryName;
+
+                        }
+
+
+                        
+                        countryMap[countryName].addSite(new Option(siteCode, siteName));
+
+
+
+
+
+
+                    }
+
                     else if(parts[0] == "skipped_value"){
 
                         SkippedValue = parts[1];
@@ -392,6 +434,13 @@ namespace BHS_questionnaire_demo
                     {
 
                         IDNOset.Add(parts[1]);
+
+
+                    }
+                    else if (parts[0] == "announcement")
+                    {
+
+                        Announcement = parts[1];
 
 
                     }
@@ -439,10 +488,14 @@ namespace BHS_questionnaire_demo
 
 
             }
-            catch
+            catch(Exception e)
             {
                 errorBox.setLabel("Error: Could not load config file");
+
                 errorBox.ShowDialog();
+
+
+                MessageBox.Show(e.Message + "************\n" + e.StackTrace);
                 
 
 

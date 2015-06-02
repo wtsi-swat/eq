@@ -61,7 +61,17 @@ namespace BHS_questionnaire_demo
         //a code label when we need special logic to work out where to go next
         public string ToCodeProcess { get; set; }
 
-        
+        //a code label when we want to fetch the text of the option from a previously selected one
+        public string PrevSelectedOpCode { get; set; }
+
+        //a code to use to get the text when the above was 'Other'
+        public string PrevSelectedOpCodeOther { get; set; }
+
+        //is this option currently selected?
+        public bool isSelected { get; set; }
+
+
+
 
         //constructor
 
@@ -69,6 +79,8 @@ namespace BHS_questionnaire_demo
         {
             this.opValue = opValue;
             this.opText = opText;
+            this.isSelected = false;
+
 
         }
 
@@ -90,6 +102,14 @@ namespace BHS_questionnaire_demo
         {
 
             return opText;
+        }
+
+        public void setText(string text)
+        {
+
+            opText = text;
+
+
         }
 
         public int getWidgetWidth()

@@ -184,9 +184,31 @@ namespace BHS_questionnaire_demo
         public override void configureControls(UserDirection direction)
         {
 
+
+            //do we want to show the skip controls?
+            if (NoAnswerDontKnowNotApplicable)
+            {
+                //yes
+                //turn the skip controls on again
+                getQM().getMainForm().setSkipControlsVisible();
+
+
+            }
+            else
+            {
+                //turn off the skip controls
+                getQM().getMainForm().setSkipControlsInvisible();
+
+
+            }
+            
+            
+            
+            
+            
             //direction is either 'forward' or 'reverse'
             //turn the skip controls on again
-            getQM().getMainForm().setSkipControlsVisible();
+            //getQM().getMainForm().setSkipControlsVisible();
 
 
             //create a label and textbox control

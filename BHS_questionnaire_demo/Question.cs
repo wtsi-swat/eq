@@ -91,7 +91,8 @@ namespace BHS_questionnaire_demo
         public string IfSettingSpecial { get; set; }
         public bool NoAnswerDontKnowNotApplicable { get; set; } //true if we want to have the 3 std skip buttons
 
-
+        public string SelectedOptionTitle { get; set; } //only relevant for qTypes with options
+        public int MaxLength { get; set; }  //max number of chars that can be typed: relevant to widgets with a textbox
 
         //properties
         public string SetKey { get; set; }
@@ -101,7 +102,13 @@ namespace BHS_questionnaire_demo
 
         public string processedData { get; set; }
 
+        public int StartYear { get; set; }
 
+        public bool ShowDaysDontKnow { get; set;}
+        public bool ShowMonthsDontKnow { get; set; }
+        public bool ShowYearsDontKnow { get; set; }
+
+        public string HideSkipControl { get; set; }     //set to the skip control to hide or null if show all.
 
 
 
@@ -848,7 +855,51 @@ namespace BHS_questionnaire_demo
         }
 
 
+        protected bool isFirstDateBeforeSecondDate(int days1, int months1, int years1, int days2, int months2, int years2)
+        {
 
+            // true if the first date occurs before the second date or both are the same date
+
+
+            //check if any parts of either date are unknown, i.e. set as 0
+
+            if (days1 == 0 || months1 == 0 || years1 == 0 || days2 == 0 || months2 == 0 || years2 == 0)
+            {
+
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't compare dates as some information uncertain");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+            }
+
+
+            //convert to date objects
+            DateTime date1 = new DateTime(years1, months1, days1);
+            DateTime date2 = new DateTime(years2, months2, days2);
+
+            if (date1 <= date2)
+            {
+
+                return true;
+            }
+            else
+            {
+
+                return false;
+
+
+            }
+
+
+
+        }
 
 
 
@@ -939,8 +990,8 @@ namespace BHS_questionnaire_demo
             {
 
                 //check the special case where the previous value was null
-
-                if (string.IsNullOrEmpty(userData) && (previousUserData == "No User Entry"))
+                //if (string.IsNullOrEmpty(userData) && (previousUserData == "No User Entry"))
+                if (string.IsNullOrEmpty(userData) && (previousUserData == "No User Entry" || previousUserData == "000"))
                 {
                     return true;
 

@@ -216,7 +216,14 @@ namespace BHS_questionnaire_demo
         }
 
 
+        public string getAnswer(string code){
 
+            return questionHash[code].processedData;
+
+
+
+
+        }
 
 
 
@@ -1602,8 +1609,21 @@ namespace BHS_questionnaire_demo
                     {
                         //No
 
-                        //dhFinalDataOut.WriteLine(qCode + "\t555");
-                        dhFinalDataOut.WriteLine(qCode + "\t" + GlobalConstants.Skipped);
+                        //differnt for BMI
+
+                        if (qCode == "BMI")
+                        {
+
+                            dhFinalDataOut.WriteLine("BMI\t" + GlobalConstants.SkippedBMI);
+
+                        }
+                        else
+                        {
+
+                            dhFinalDataOut.WriteLine(qCode + "\t" + GlobalConstants.Skipped);
+
+                        }
+                        
 
 
 
@@ -1614,6 +1634,7 @@ namespace BHS_questionnaire_demo
                 }
 
                 //BMI (not in qHash): has special code 444 if skipped
+                /*
                 if (!qCodes.Contains("BMI"))
                 {
 
@@ -1622,6 +1643,7 @@ namespace BHS_questionnaire_demo
 
 
                 }
+                 * */
 
 
 
@@ -2356,6 +2378,9 @@ namespace BHS_questionnaire_demo
             QuestionTextDate qtdt;
             QuestionSelectText qst;
             QuestionRank qrk;
+            //QuestionSelectAuto qsa;
+            QuestionMultiSelect qsm;
+
 
 
             Option op;
@@ -2566,6 +2591,123 @@ namespace BHS_questionnaire_demo
 
             }
 
+            nodeItr = nav.Select("//QuestionSelectMulti");
+
+            while (nodeItr.MoveNext())
+            {
+
+
+                qsm = new QuestionMultiSelect(form, bigMessageBox, gs, specialDataStore, this);
+                populateQuestion(qsm, nodeItr);
+
+                //add options
+
+                //are we using options from the global config?
+                string configKey = qsm.ConfigKey;
+
+                populateOptions(qsm, nodeItr, configKey);
+
+
+
+            }
+
+
+
+
+
+            nodeItr = nav.Select("//QuestionSelectAuto");
+
+            while (nodeItr.MoveNext())
+            {
+
+                //do we have 1 option or more than 1?
+                string configKey;
+                List<Option> opsList;
+
+                nav = nodeItr.Current.SelectSingleNode("child::ConfigKey");
+                
+                if (nav != null)
+                {
+                    configKey = nav.Value;
+                }
+                else
+                {
+
+                    throw new Exception("NO config key for QuestionSelectAuto:");
+
+
+                }
+                
+                Qconfig conf = mainForm.config;
+                string selectedCountryName = conf.selectedCountryName;
+                if (configKey == "SiteCode")
+                {
+
+                    opsList = conf.countryMap[selectedCountryName].sites;
+
+                }
+                else{
+
+                    throw new Exception("unknown config key for QuestionSelectAuto:" + configKey);
+
+                }
+
+
+                if (opsList.Count == 1)
+                {
+
+                    //1 option: convert to a QuestionAutomatic
+
+                    qauto = new QuestionAutomatic(form, bigMessageBox, gs, specialDataStore, this);
+                    populateQuestion(qauto, nodeItr);
+
+                    //a question-automatic needs a process method- in this case we simply get the single option
+                    qauto.Process = "getSiteCodeForSelectedCountry";
+                    qauto.SelectedData = opsList[0].getValue();
+
+
+
+                }
+                else
+                {
+
+                    //qsa = new QuestionSelectAuto(form, bigMessageBox, gs, specialDataStore, this);
+                    //populateQuestion(qsa, nodeItr);
+
+                    //populateOptions(qsa, nodeItr, configKey);
+
+
+
+                    /////////////
+
+
+                    qs = new QuestionSelect(form, bigMessageBox, gs, specialDataStore, this);
+                    populateQuestion(qs, nodeItr);
+
+                    populateOptions(qs, nodeItr, configKey);
+
+
+
+
+
+
+                }
+
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+
             /*
             nodeItr = nav.Select("//QuestionSelectVarOptions");
 
@@ -2728,6 +2870,14 @@ namespace BHS_questionnaire_demo
 
 
                 }
+
+                else if (configKey == "SiteCode")
+                {
+
+                    opsList = conf.countryMap[selectedCountryName].sites;
+
+
+                }
                 else
                 {
 
@@ -2771,8 +2921,63 @@ namespace BHS_questionnaire_demo
                 //value
                 string optionValue = optionItr.Current.SelectSingleNode("child::Value").Value;
 
+                nav = optionItr.Current.SelectSingleNode("child::Title");
+                string optionText = null;
+                string optionPrevSelectedOpCode = null;
+                string optionPrevSelectedOpCodeOther = null;
+
+
+                if (nav != null)
+                {
+                    //get title
+                    optionText = getTitle(optionItr, "Title");
+
+                }
+                else
+                {
+                    //if we don't have a title, we must have <UsePreviousSelectedOption>Code</UsePreviousSelectedOption>
+
+                    nav = optionItr.Current.SelectSingleNode("child::UsePreviousSelectedOption");
+
+                    if (nav == null)
+                    {
+                        //error
+                        throw new Exception("Option missing title");
+
+
+                    }
+                    else
+                    {
+
+                        optionPrevSelectedOpCode = nav.Value;
+
+                        //there may be an attribute called "other", which describes the code to use
+                        //to fetch the text, if other is selected
+
+                        nav = optionItr.Current.SelectSingleNode("child::UsePreviousSelectedOption/@other");
+                        if (nav != null)
+                        {
+
+                            optionPrevSelectedOpCodeOther= nav.Value;
+
+
+                        }
+
+
+
+
+                    }
+
+
+                }
+
+
+
+
+
+
                 //text
-                string optionText = getTitle(optionItr, "Title");
+                //string optionText = getTitle(optionItr, "Title");
 
                 //get the child node: WidgetPos
                 //optional, i.e. not used for Select type options
@@ -2883,6 +3088,9 @@ namespace BHS_questionnaire_demo
                 op.ToCodeErr = optionToCodeErr;
                 op.ToCodeSecond = toCodeSecond;
                 op.ToCodeProcess = toCodeProcess;
+                op.PrevSelectedOpCode = optionPrevSelectedOpCode;
+                op.PrevSelectedOpCodeOther = optionPrevSelectedOpCodeOther;
+
 
 
 
@@ -3080,6 +3288,19 @@ namespace BHS_questionnaire_demo
 
 
 
+            //MaxLength: the maximum number of chars that can be typed in the textbox
+            nav = nodeItr.Current.SelectSingleNode("child::MaxLength");
+            q.MaxLength = 0;
+            if (nav != null)
+            {
+
+                q.MaxLength = Convert.ToInt32(nav.Value);
+
+            }
+            
+
+
+
             //FromCode: optional
             nav = nodeItr.Current.SelectSingleNode("child::FromCode");
             q.FromCode = null;
@@ -3181,6 +3402,94 @@ namespace BHS_questionnaire_demo
             if (nav != null)
             {
                 q.MultiLine = true;
+
+            }
+
+
+            //for Date type: earliest year to display: optional
+
+            nav = nodeItr.Current.SelectSingleNode("child::StartYear");
+            q.StartYear = 0;
+
+            if (nav != null)
+            {
+                q.StartYear = Convert.ToInt32(nav.Value);
+
+
+            }
+
+
+            //for Date type: show "dont know" as an option for Day, month, year?
+            //can be "True" or "False"
+            nav = nodeItr.Current.SelectSingleNode("child::ShowDaysDontKnow");
+            q.ShowDaysDontKnow = true;  //default is we show this
+
+            if (nav != null)
+            {
+                if (nav.Value == "True")
+                {
+                    q.ShowDaysDontKnow = true; 
+
+                }
+                else
+                {
+                    q.ShowDaysDontKnow = false;
+
+
+                }
+                
+            }
+
+
+            nav = nodeItr.Current.SelectSingleNode("child::ShowMonthsDontKnow");
+            q.ShowMonthsDontKnow = true;  //default is we show this
+
+            if (nav != null)
+            {
+                if (nav.Value == "True")
+                {
+                    q.ShowMonthsDontKnow = true;
+
+                }
+                else
+                {
+                    q.ShowMonthsDontKnow = false;
+
+
+                }
+
+            }
+
+
+            nav = nodeItr.Current.SelectSingleNode("child::ShowYearsDontKnow");
+            q.ShowYearsDontKnow = true;  //default is we show this
+
+            if (nav != null)
+            {
+                if (nav.Value == "True")
+                {
+                    q.ShowYearsDontKnow = true;
+
+                }
+                else
+                {
+                    q.ShowYearsDontKnow = false;
+
+
+                }
+
+            }
+
+            //can hide a specific skip control
+            //e.g. <HideSkipControl>Not Applicable</HideSkipControl>
+            nav = nodeItr.Current.SelectSingleNode("child::HideSkipControl");
+            q.HideSkipControl = null;
+
+            if (nav != null)
+            {
+
+                q.HideSkipControl = nav.Value;
+                
 
             }
 

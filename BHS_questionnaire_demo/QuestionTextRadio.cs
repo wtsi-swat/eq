@@ -192,6 +192,15 @@ namespace BHS_questionnaire_demo
             label = new Label();
             textbox = new TextBox();
 
+            if (MaxLength > 0)
+            {
+                textbox.MaxLength = MaxLength;
+
+            }
+
+
+
+
             //trap any keypress to deselect the skip-controls
             textbox.KeyPress += new KeyPressEventHandler(button_click);
 

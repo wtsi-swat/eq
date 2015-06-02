@@ -64,6 +64,14 @@ namespace BHS_questionnaire_demo
 
         }
 
+
+        //used when this has replaced a select with a single dynamic option
+        public string SelectedData
+        {
+            get;
+            set;
+        }
+
         
 
         //constructor
@@ -142,6 +150,16 @@ namespace BHS_questionnaire_demo
                 getSD().Add("DEXAM2", day);
                 getSD().Add("MEXAM2", month);
                 getSD().Add("YEXAM2", year);
+
+
+            }
+
+            else if (Process == "getSiteCodeForSelectedCountry")
+            {
+
+                //fetch the siteCode for the selected country.
+                processedData = SelectedData;
+
 
 
             }
@@ -265,7 +283,11 @@ namespace BHS_questionnaire_demo
                     //some data not present
 
                     //set a value for processedData to prevent problems with locking the Questionnaire
-                    processedData = "BMI_NOT_AVAILABLE";
+
+                    //Qconfig q = getQM().getMainForm().config;
+                    processedData = GlobalConstants.SkippedBMI;
+
+                    //processedData = "BMI_NOT_AVAILABLE";
 
                     Form3 warningBox = getQM().getWarningBox();
 
@@ -360,6 +382,75 @@ namespace BHS_questionnaire_demo
 
 
             }
+
+            
+
+            else if (Process.StartsWith("SetCurrentDateAndCheckThisDateAfterDate::"))
+            {
+
+                //get the current time.
+                DateTime now = DateTime.Now;
+
+                processedData = now.ToString();
+                
+                 
+                string otherDateQ = Process.Substring(41);
+
+                //fetch the date to compare with
+                string otherDate = getGS().Get(otherDateQ);
+
+                if (otherDate == null)
+                {
+                    Form3 warningBox = getQM().getWarningBox();
+
+                    warningBox.setLabel("Warning: Can't compare with previous date: " + otherDateQ + " as that question has not been answered");
+                    warningBox.ShowDialog();
+
+
+                }
+                else
+                {
+
+                    Match match = Regex.Match(otherDate, @"(\d+)/(\d+)/(\d+)");
+
+                    int daysOther;
+                    int monthsOther;
+                    int yearsOther;
+
+                    if (match.Success)
+                    {
+
+                        daysOther = Convert.ToInt32(match.Groups[1].Value);
+                        monthsOther = Convert.ToInt32(match.Groups[2].Value);
+                        yearsOther = Convert.ToInt32(match.Groups[3].Value);
+
+                        if (!isFirstDateBeforeSecondDate(daysOther, monthsOther, yearsOther, now.Day, now.Month, now.Year))
+                        {
+                            //error
+                            ((Form2)getBigMessageBox()).setLabel("This date is before the date from: " + otherDateQ);
+                            getBigMessageBox().ShowDialog();
+
+                           
+                        }
+
+                    }
+                    else
+                    {
+                        throw new Exception("date parsing failed");
+
+                    }
+
+
+                }
+
+
+
+            }
+
+
+
+
+
             else if (Process == "CheckSYST")
             {
                 string message;
@@ -514,6 +605,33 @@ namespace BHS_questionnaire_demo
                 {
 
                     processedData = country;
+
+
+                }
+
+
+
+
+
+            }
+            else if(Process=="Namibia_consents"){
+
+                //branch depending on status of consents.
+
+                string firstCon = getGS().Get("CON");
+                string secCon = getGS().Get("CON1");
+
+                //goto next question if either are Yes (1)
+                //goto THANKYOU if both are No (2)
+
+                if (firstCon == "1" || secCon == "1")
+                {
+
+                    return ToCode;
+                }
+                else
+                {
+                    return "THANKYOU";
 
 
                 }

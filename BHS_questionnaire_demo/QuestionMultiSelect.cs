@@ -1,5 +1,4 @@
-
-/*
+﻿/*
 Copyright (c) 2014 Genome Research Ltd.
 Author: Stephen Rice <sr7@sanger.ac.uk>
 Redistribution and use in source and binary forms, with or without
@@ -24,7 +23,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-﻿using System;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,21 +33,22 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using System.IO;
 
+
+
 namespace BHS_questionnaire_demo
 {
-    class QuestionSelect : Question, IoptionList
+    class QuestionMultiSelect : Question, IoptionList
     {
 
-        
-        private Label label; 
+        private Label label;
 
-        private ComboBox selectBox;
+        private CheckedListBox selectBox;
 
         private List<Option> optionList;
 
-        
+
         //constructor
-        public QuestionSelect(Form form, Form bigMessageBox, GlobalStore gs, GlobalStore specialDataStore, QuestionManager qm)
+        public QuestionMultiSelect(Form form, Form bigMessageBox, GlobalStore gs, GlobalStore specialDataStore, QuestionManager qm)
             : base(form, bigMessageBox, gs, specialDataStore, qm)
         {
             //init the optionslist
@@ -94,7 +95,7 @@ namespace BHS_questionnaire_demo
 
         public override void removeControls()
         {
-            
+
 
             getQM().getPanel().Controls.Remove(label);
             getQM().getPanel().Controls.Remove(selectBox);
@@ -134,11 +135,11 @@ namespace BHS_questionnaire_demo
 
 
             }
-            
-            
+
+
             //turn the skip controls on again
             //getQM().getMainForm().setSkipControlsVisible();
-            
+
             //create a label 
             label = new Label();
 
@@ -156,137 +157,99 @@ namespace BHS_questionnaire_demo
             //label.AutoSize = true;
             label.Size = new Size(getWidgetWidth(), getWidgetHeight());
 
-             
-            selectBox = new ComboBox();
+
+            selectBox = new CheckedListBox();
 
             //set font size
             setFontSize(label, selectBox);
-            
+
 
             //event handlers
             //trap any keypress to deselect the skip-controls
             selectBox.Click += new EventHandler(button_click);
-            
+
             //stop user being able to type in the combobox
-            selectBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            
+            //selectBox.DropDownStyle = ComboBoxStyle.DropDownList;
+
 
             selectBox.BackColor = GlobalColours.controlBackColour;
-            
+
             selectBox.Location = new Point(labelXpos, labelYpos + getWidgetHeight());
-            selectBox.Size = new Size(SelectLength, 20);
-
-            //stop the list spreading too far on tablet screen
-            selectBox.IntegralHeight = false; //won't work unless this is set to false
-            selectBox.MaxDropDownItems = 5;
+            selectBox.Size = new Size(SelectLength, 200);
 
 
-
-
-
-            Option previouslySelectedOption = null;
-            
-            
-            //add items to combobox
-            foreach (Option op in optionList)
+            //make sure that the options are the same as processed Data if any
+            if (processedData != null)
             {
+                //parse
+                
+                string[] selectedValues = Regex.Split(processedData, "~~");
+                //add to a set
+                HashSet<string> valSet= new HashSet<string>();
 
-                //check if this option depends on a previously selected one from a differnt question
-                if (op.PrevSelectedOpCode != null)
+                foreach(string value in selectedValues){
+
+                    valSet.Add(value);
+
+                }
+
+                foreach (Option op in optionList)
                 {
-                    string prevCode = op.PrevSelectedOpCode;
 
-                    //in some cases we have another code that can fetch the text from another question
-                    //that contains what the user typed as 'other'
-                    string prevCodeOther = op.PrevSelectedOpCodeOther;
-                    
-
-                    //get that question
-                    Question prevQ = getQM().getQuestion(prevCode);
-
-                    //get the selected option's title text
-                    //it is possible that this question has not been visited so will have no selected option
-
-                    string selectedTitle = prevQ.SelectedOptionTitle;
-
-                    if (selectedTitle == null)
+                    //is the value of this option in our list?
+                    if (valSet.Contains(op.getValue()))
                     {
-                        selectedTitle = "Error: Title Unknown (1)";
+
+                        op.isSelected = true;
 
                     }
                     else
                     {
 
-                        if (selectedTitle == "Other" && prevCodeOther != null)
-                        {
-                            //get the text from prevCodeOther and use that as the option text
-                            Question prevQother = getQM().getQuestion(prevCodeOther);
+                        op.isSelected = false;
 
-                            selectedTitle = prevQother.processedData;
-
-                            if (selectedTitle == null)
-                            {
-                                selectedTitle = "Error: Title Unknown (2)";
-
-                            }
-
-
-                        }
-                        
-                        
-                       
                     }
 
-                    op.setText(selectedTitle);
-
-                    
 
                 }
+
+
+            }
+
+
+
+            //add items to combobox
+            int i = 0;
+            foreach (Option op in optionList)
+            {
 
                 selectBox.Items.Add(op);
 
-                //is this option the one that was selected previously ?
-                if (processedData != null)
+                if (op.isSelected)
                 {
-                    if (processedData == op.getValue())
-                    {
-                        previouslySelectedOption = op;
 
-                    }
+                    //show as checked
+                    
+                    selectBox.SetItemChecked(i, true);
 
 
 
                 }
 
+                i++;
 
-
-
-                
-               
-            }
-
-
-
-            if (PageSeen && (processedData != null))
-            {
-
-                if (previouslySelectedOption != null)
-                {
-
-                    selectBox.SelectedItem = previouslySelectedOption;
-
-                }
                 
 
 
-
             }
+
+
 
             //add to the form
             getQM().getPanel().Controls.Add(label);
-            
+
             getQM().getPanel().Controls.Add(selectBox);
-            
+
             setSkipSetting();
 
             //start audio recording if enabled
@@ -306,7 +269,7 @@ namespace BHS_questionnaire_demo
             string skipSetting = getSkipSetting();
             if (skipSetting != null)
             {
-               
+
 
                 processedData = skipSetting;
 
@@ -318,47 +281,86 @@ namespace BHS_questionnaire_demo
             }
 
 
-
-            //get the selected date
-
-
-            //object selectedData = selectBox.SelectedItem;
-
-            Option selectedOption = (Option)(selectBox.SelectedItem);
-
-
-
-            //are any of these null
-            if (selectedOption == null)
+            //we can have any number of selected options
+            if (selectBox.CheckedItems.Count == 0)
             {
+                //nothing selected
                 ((Form2)getBigMessageBox()).setLabel("You must choose something");
                 getBigMessageBox().ShowDialog();
 
                 return Code;
+
+
+
+
+            }
+
+            
+            //get selected options
+            // If so, loop through all checked items and print results.
+            Option selectedOp;
+            string opStr = "";
+
+            List<Option> selectedOptions = new List<Option>();
+
+
+            //set all options as not selected
+            foreach (Option op in optionList)
+            {
+                op.isSelected = false;
+
             }
 
 
-            //do we want to forward to another question if this one has been displayed already?
-            string toCodeSecond = selectedOption.ToCodeSecond;
 
-            if ((getNumTimesShown() > 1) && (toCodeSecond != null))
+            
+            for (int x = 0; x < selectBox.CheckedItems.Count; x++)
             {
 
-                //show a message if one is defined
-                if (MessageOnSecondFail != null)
+                selectedOp = (Option)selectBox.CheckedItems[x];
+
+                //set the option as selected so we can remember it if we see this Question again
+                selectedOp.isSelected = true;
+
+                selectedOptions.Add(selectedOp);
+                
+                opStr += (selectedOp.getValue());
+
+
+                //is this None?
+                if (selectedOp.getText() == "None")
                 {
 
-                    Form3 warningBox = getQM().getWarningBox();
+                    //this must be the only selected item, otherwise error
+                    if (selectBox.CheckedItems.Count > 1)
+                    {
+                        //error:
+                        ((Form2)getBigMessageBox()).setLabel("You Can't select 'None' AND other option(s)");
+                        getBigMessageBox().ShowDialog();
 
-                    warningBox.setLabel(MessageOnSecondFail);
-                    warningBox.ShowDialog();
+                        return Code;
 
+
+                    }
 
                 }
 
-                return toCodeSecond;
 
+
+
+                //add delimiter if not the last item
+                if (x < (selectBox.CheckedItems.Count - 1))
+                {
+
+                    opStr += ("~~");
+                }
+                
+               
             }
+
+
+            
+                
 
 
 
@@ -371,66 +373,52 @@ namespace BHS_questionnaire_demo
             //processedData = selectedData.ToString();
 
             //get the value not the text for the option
-            processedData = selectedOption.getValue();
+            processedData = opStr;
 
-            SelectedOptionTitle = selectedOption.getText();
 
-            string toCodeProcess = selectedOption.ToCodeProcess;
+
+
+            //SelectedOptionTitle = selectedOption.getText();
+
+            //string toCodeProcess = selectedOption.ToCodeProcess;
 
             //if we have a global setting: save to the global object
             string globalKey = SetKey;
             if (globalKey != null)
             {
 
-                if ((toCodeProcess != null) && (toCodeProcess == "HepC:setKeyPositive"))
-                {
-                    //treat this as if positive
-                    getGS().Add(globalKey, "1");
-
-
-                }
-                else
-                {
-
                     getGS().Add(globalKey, processedData);
-                }
                 
+
             }
 
 
 
 
             //does the selected option have a ToCode?
+            //check each in the list
+            foreach(Option op in selectedOptions){
 
-            string optionToCode = selectedOption.ToCode;
+                if (op.ToCode != null)
+                {
 
-            if (optionToCode == null)
-            {
-                return ToCode;
+                    return op.ToCode;
 
-            }
-            else
-            {
-                return optionToCode;
+                }
 
 
             }
 
+            //if no selected option has a tocode
 
-            
-
-            
-
+            return ToCode;
 
 
+           
 
 
 
         }
-
-
-
-
 
 
 

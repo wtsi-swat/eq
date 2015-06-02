@@ -53,11 +53,11 @@ namespace BHS_questionnaire_demo
 
 
         //the data the user entered, which may be different to the processed data
-        private string userData= null;
+        private string userData = null;
 
 
         //properties
-       
+
 
 
         //constructor
@@ -72,7 +72,7 @@ namespace BHS_questionnaire_demo
 
 
         //methods
-       
+
 
 
 
@@ -91,8 +91,8 @@ namespace BHS_questionnaire_demo
                 dhUserData.WriteLine(Code + "\t" + userData);
 
             }
-            
-            
+
+
         }
 
         public override void load(Dictionary<string, string> pDataDict, Dictionary<string, string> uDataDict)
@@ -137,24 +137,64 @@ namespace BHS_questionnaire_demo
         public override void configureControls(UserDirection direction)
         {
 
+            //do we want to show the skip controls?
+            if (NoAnswerDontKnowNotApplicable)
+            {
+                //yes
+                //turn the skip controls on again
+                getQM().getMainForm().setSkipControlsVisible();
+
+
+            }
+            else
+            {
+                //turn off the skip controls
+                getQM().getMainForm().setSkipControlsInvisible();
+
+
+            }
+
+
+            //do we want to hide a specific skip control?
+            if (HideSkipControl != null)
+            {
+
+                getQM().getMainForm().setSpecificSkipControlInvisible(HideSkipControl);
+
+            }
 
             
-            
+
+
+
+
+
             //direction is either 'forward' or 'reverse'
             //turn the skip controls on again
-            getQM().getMainForm().setSkipControlsVisible();
+            //getQM().getMainForm().setSkipControlsVisible();
 
 
             //create a label and textbox control
             label = new Label();
             textbox = new TextBox();
 
+
+
+            if (MaxLength > 0)
+            {
+                textbox.MaxLength = MaxLength;
+
+            }
+
+
+
+
             //set font size
             setFontSize(label, textbox);
 
- 
 
-            
+
+
             //trap any keypress to deselect the skip-controls
             textbox.KeyPress += new KeyPressEventHandler(button_click);
 
@@ -184,7 +224,7 @@ namespace BHS_questionnaire_demo
 
             //position of the textbox
             textbox.Location = new Point(textBoxXpos, textBoxYpos);
-            
+
 
 
             //is this a textarea ?
@@ -208,7 +248,7 @@ namespace BHS_questionnaire_demo
 
 
 
-            
+
 
             if (PageSeen)
             {
@@ -248,7 +288,7 @@ namespace BHS_questionnaire_demo
 
             }
 
-           
+
 
 
             //set the console radio buttons
@@ -286,7 +326,7 @@ namespace BHS_questionnaire_demo
             {
                 //userData might contain line-breaks, which will mess up the data formatting
                 userData = userData.Replace("\r\n", " ");
-                
+
 
 
 
@@ -300,73 +340,92 @@ namespace BHS_questionnaire_demo
             //if (getQM().SkipThisQuestion)
 
             string skipSetting = getSkipSetting();
-            if(skipSetting != null)
+            if (skipSetting != null)
             {
                 //yes
 
-                    processedData = skipSetting;
-                    //userData = skipSetting;
-                    userData = "";
+                processedData = skipSetting;
+                //userData = skipSetting;
+                userData = "";
 
-                    if (Validation == "CheckSameAsPrevious")
+                if (Validation == "CheckSameAsPrevious")
+                {
+
+                    //get the previous value.
+                    bool thisDataOK = testCheckSameAsPrevious(skipSetting);
+
+                    if (thisDataOK)
                     {
 
-                        //get the previous value.
-                        bool thisDataOK = testCheckSameAsPrevious(skipSetting);
 
-                        if (thisDataOK)
+                        if (Process == "MHPI_SPECIAL_AGE")
                         {
 
-                            return ToCode;
+                            if (processedData == "No Answer" || processedData == "Don't Know")
+                            {
+                                return "THANKYOU";
 
+
+                            }
 
 
                         }
-                        else
-                        {
 
-
-                            ((Form2)getBigMessageBox()).setLabel("The value you entered is not the same as the previous question: please try again");
-                            getBigMessageBox().ShowDialog();
-
-                            return OnErrorQuestionCompare;
-
-
-                        }
+                        return ToCode;
 
 
 
                     }
-
-                    else if (Process == "SPECIAL:H3A_TOB4B")
+                    else
                     {
-                        //If  no answer or don’t know or 00 go to question 30a [TOB30a]
-                        if (processedData == "No Answer" || processedData == "Don't Know")
-                        {
-                            return "TOB30A";
 
 
-                        }
-                        else
-                        {
+                        ((Form2)getBigMessageBox()).setLabel("The value you entered is not the same as the previous question: please try again");
+                        getBigMessageBox().ShowDialog();
 
-                            return ToCode;
-
-                        }
-
-
+                        return OnErrorQuestionCompare;
 
 
                     }
 
+
+
+                }
+
+                else if (Process == "SPECIAL:H3A_TOB4B")
+                {
+                    //If  no answer or don’t know or 00 go to question 30a [TOB30a]
+                    if (processedData == "No Answer" || processedData == "Don't Know")
+                    {
+                        return "TOB30A";
+
+
+                    }
                     else
                     {
 
                         return ToCode;
 
                     }
-                
-               
+
+
+
+
+                }
+
+
+
+
+
+
+                else
+                {
+
+                    return ToCode;
+
+                }
+
+
 
             }
 
@@ -383,11 +442,12 @@ namespace BHS_questionnaire_demo
             {
 
                 //MessageBox.Show("testing null entry");
-                
+
                 dataOK = testNullEntry(userData);
                 errorMessage = "Error: please try again";
 
             }
+
 
 
             else if (Validation == "TestDiagnosisAge")
@@ -475,6 +535,38 @@ namespace BHS_questionnaire_demo
 
             }
 
+            else if (Validation == "TestYear")
+            {
+
+                //must be a 4-digit number
+
+                dataOK = TestYear(userData);
+                errorMessage = "Please enter a Year (4-digit number)";
+
+
+            }
+
+            else if (Validation.StartsWith("TestNumCharsIs:"))
+            {
+                //must have extactly the specified number of chars
+                int numCharsRequired = Convert.ToInt32(Validation.Substring(15));
+
+                if (userData.Length == numCharsRequired)
+                {
+                    dataOK = true;
+
+                }
+                else
+                {
+
+                    dataOK = false;
+                    errorMessage = "Error: you must enter exactly " + numCharsRequired + " characters";
+                }
+
+
+
+            }
+
             else if (Validation == "TestNumberBetween0and100")
             {
 
@@ -534,6 +626,13 @@ namespace BHS_questionnaire_demo
                 dataOK = TestBetweenDecimal(userData, 0, 20);
                 errorMessage = "Please enter a number > 0 and <= 20";
 
+
+
+            }
+            else if (Validation == "TestBetween0and30")
+            {
+                dataOK = TestBetweenDecimal(userData, 0, 30);
+                errorMessage = "Please enter a number >= 0 and <= 30";
 
 
             }
@@ -677,15 +776,156 @@ namespace BHS_questionnaire_demo
 
                 }
 
+            }
 
 
+            else if (Validation == "TestNumericLargeInt")
+            {
+                //must be an integer number
+
+                try
+                {
+                    Convert.ToInt64(userData);
+                    dataOK = true;
+
+
+
+                }
+                catch
+                {
+                    dataOK = false;
+                    errorMessage = "Please enter a Number";
+
+                }
 
             }
+
+
+
+
+
             else if (Validation == "TestPhoneNumber")
             {
 
                 dataOK = TestPhoneNumber(userData);
                 errorMessage = "Please enter a phone number (10 digits, no other symbols)";
+
+
+
+            }
+
+            else if (Validation == "TestYearsLessThanCurrentLifeSpan")
+            {
+
+                int years;
+
+                try
+                {
+                    years = Convert.ToInt32(userData);
+
+                    dataOK = TestYearsLessThanCurrentLifeSpan(years);
+                    errorMessage = "Years are greater than Age";
+
+
+                }
+                catch
+                {
+                    dataOK = false;
+                    errorMessage = "You must enter a Number";
+
+                }
+
+
+
+            }
+
+            else if (Validation.StartsWith("TestDOBmatchesAge::"))
+            {
+                //make sure that a number was entered
+                try
+                {
+                    int age = Convert.ToInt32(userData);
+
+                    //OK it is an integer
+                    dataOK = testUncertainDOBmatchesAge(userData);
+
+                    if (dataOK)
+                    {
+                        //Check to make sure the number is ≥ 12 and ≤ 60.
+                        if (age < 12 || age > 60)
+                        {
+                            //show a warning and flag data manager for review
+
+                            Form3 warningBox = getQM().getWarningBox();
+
+                            warningBox.setLabel("Warning: Age is not between 12 and 60: alerting Data Manager");
+                            warningBox.ShowDialog();
+
+                            getSD().Add("DATA_MANAGER_REVIEW_OUTSIDE_AGE_RANGE", userData);
+
+                        }
+
+
+                        //age OK, but should also check it is the same as entered previously in CON1
+                        //Check AGE against CON1, if there is a discrepancy, flag for data manager to review.
+
+                        string con1Age = getGS().Get("CON1");
+
+                        if (con1Age != null && con1Age != userData)
+                        {
+
+                            Form3 warningBox = getQM().getWarningBox();
+
+                            warningBox.setLabel("Warning: Age is not the same as the age entered for CON1: alerting Data Manager");
+                            warningBox.ShowDialog();
+
+                            getSD().Add("DATA_MANAGER_REVIEW_MISMATCH_CON1_VS_AGE", userData);
+
+
+
+                        }
+
+
+
+                    }
+                    else
+                    {
+                        errorMessage = "The age you entered is not consistent with the date";
+
+                        ((Form2)getBigMessageBox()).setLabel(errorMessage);
+                        getBigMessageBox().ShowDialog();
+
+                        string formCode = Validation.Substring(19);
+
+                        if (formCode == "MHPI")
+                        {
+
+                            return "DOB";
+
+                        }
+                        else
+                        {
+                            throw new Exception("invalid formCode");
+
+
+                        }
+
+
+                    }
+
+
+
+                }
+                catch
+                {
+
+                    //not a number
+
+                    dataOK = false;
+                    errorMessage = "Please enter a number";
+
+                }
+
 
 
 
@@ -702,6 +942,51 @@ namespace BHS_questionnaire_demo
                     //OK it is an integer
                     dataOK = testDOB(userData, 18);
                     errorMessage = "The age you entered is not consistent with the date";
+
+
+
+
+                }
+                catch
+                {
+
+                    //not a number
+
+                    dataOK = false;
+                    errorMessage = "Please enter a number";
+
+                }
+
+
+
+            }
+
+            //else if (Validation == "TestAGEover18")
+
+            else if (Validation.StartsWith("TestAGEover18::"))
+            {
+
+                //make sure that a number was entered
+                try
+                {
+                    Double age = Convert.ToDouble(userData);
+
+                    if ((age >= 18) && (age <= 110))
+                    {
+                        dataOK = true;
+
+                    }
+                    else
+                    {
+                        errorMessage = "The age must be between 18 and 110";
+                        ((Form2)getBigMessageBox()).setLabel(errorMessage);
+                        getBigMessageBox().ShowDialog();
+
+                        string thisToCode = Validation.Substring(15);
+
+                        return thisToCode;
+
+                    }
 
 
                 }
@@ -780,12 +1065,12 @@ namespace BHS_questionnaire_demo
                     errorMessage = "Please enter a number";
 
                 }
-                 */ 
+                 */
 
 
 
             }
-                 
+
 
             else if (Validation == "TestSameAsRES")
             {
@@ -973,6 +1258,18 @@ namespace BHS_questionnaire_demo
 
             }
 
+            else if (Validation.StartsWith("TestValueGreaterThan:"))
+            {
+
+                string targetQ = Validation.Substring(21);
+
+                dataOK = TestValueGreaterThan(userData, targetQ);
+
+                errorMessage = "The Value entered must be greater than the value entered in " + targetQ;
+
+
+
+            }
             else if ((Validation == "CheckAgeSameAsOrLessThanAGE") || (Validation == "CheckAgeSmokingStartLessThanAgeSmokingStop"))
             {
 
@@ -1304,6 +1601,24 @@ namespace BHS_questionnaire_demo
 
             }
 
+            else if(Validation.StartsWith("TestLessThan::"))
+            {
+
+                //compare to
+                string compCode= getGS().Get(Validation.Substring(14));
+
+                int compVal= Convert.ToInt32(compCode);
+
+                dataOK = testLessThan(userData, compVal);
+                errorMessage = "You must enter a number that is "+ compCode + " or less";
+
+
+
+            }
+
+
+
+
             else if (Validation == "TestSameAsParticipantID")
             {
 
@@ -1337,8 +1652,8 @@ namespace BHS_questionnaire_demo
                     nextCode = Code;
 
                 }
-                
-                
+
+
                 //process the data
                 else if (Process == "NoModify")
                 {
@@ -1348,11 +1663,16 @@ namespace BHS_questionnaire_demo
                     nextCode = ToCode;
 
                 }
+
+                
+
+
+
                 else if (Process == "CalcBMI")
                 {
 
                     calcBMI(userData);
-                    
+
                     //make no changes
                     processedData = userData;
                     //advance to the next question
@@ -1360,6 +1680,58 @@ namespace BHS_questionnaire_demo
 
 
                 }
+
+                else if (Process.StartsWith("TestBabyWeight::"))
+                {
+                    string fromCode = Process.Substring(16);
+                    
+                    nextCode= TestBabyWeight(userData, fromCode);
+
+                    //make no changes
+                    processedData = userData;
+                    //advance to the next question
+                    //nextCode = ToCode;
+
+                    //convert weight to grams
+                    ConvertToGrams(userData);
+
+
+                }
+
+                else if (Process.StartsWith("TestBabyUltrasound::"))
+                {
+
+                    if (string.IsNullOrEmpty(userData))
+                    {
+
+                        processedData = "000";
+                        nextCode = ToCode;
+
+
+
+                    }
+                    else
+                    {
+
+                        string fromCode = Process.Substring(20);
+
+                        nextCode = TestBabyUltrasound(userData, fromCode);
+
+                        //make no changes
+                        processedData = userData;
+
+
+                    }
+                    
+                    
+                    
+
+
+                }
+
+
+
+
                 else if (Process == "SaveBMI")
                 {
                     //user has entered their own BMI reading, so we need to override our 
@@ -1439,6 +1811,43 @@ namespace BHS_questionnaire_demo
 
 
                 }
+
+                else if (Process.StartsWith("EnterCodeForNull::"))
+                {
+
+                    if (string.IsNullOrWhiteSpace(userData))
+                    {
+
+                        processedData = Process.Substring(18);
+
+                    }
+                    else
+                    {
+                        processedData = userData;
+                        
+                    }
+
+
+                    nextCode = ToCode;
+
+
+                }
+
+                else if (Process == "MHPI_SPECIAL_AGE")
+                {
+
+                    processedData = userData;
+
+                    nextCode = ProcessMHPIspecialAge(userData);
+
+
+
+
+                }
+
+
+
+
                 else if (Process == "CorrectCuffSize")
                 {
                     processedData = userData;
@@ -1484,6 +1893,24 @@ namespace BHS_questionnaire_demo
 
                 }
 
+                else if (Process.StartsWith("If0Goto::"))
+                {
+                    processedData = userData;
+
+                    if (userData == "0")
+                    {
+                        nextCode = Process.Substring(9);
+
+                    }
+                    else
+                    {
+                        nextCode = ToCode;
+
+                    }
+
+
+                }
+
                 else if (Process == "If0GotoDIET5")
                 {
                     processedData = userData;
@@ -1517,9 +1944,9 @@ namespace BHS_questionnaire_demo
                         processedData = userData;
 
                     }
-                    
-                    
-                    
+
+
+
 
                     nextCode = ToCode;
 
@@ -1590,8 +2017,8 @@ namespace BHS_questionnaire_demo
                 else if ((Validation == "TestDOB" || Validation == "HEPC:TestDOB") && (getNumTimesShown() > 1))
                 {
 
-                   
-                        nextCode = "THANKYOU";
+
+                    nextCode = "THANKYOU";
 
 
                 }
@@ -1648,11 +2075,11 @@ namespace BHS_questionnaire_demo
 
             if (match.Success)
             {
-                
+
                 years = Convert.ToInt32(match.Groups[3].Value);
 
                 //if years or months or days ==0, these are unknown so we can't do this test
-                if (years == 0 )
+                if (years == 0)
                 {
 
                     //show a warning
@@ -1723,8 +2150,50 @@ namespace BHS_questionnaire_demo
         }
 
 
+        private bool TestYearsLessThanCurrentLifeSpan(int years)
+        {
+
+            //true if the number of years entered by the user is less than or equal to the total time they have been alive
+
+            string ageAsStr = getGS().Get("AGE");
+
+            if (ageAsStr == null)
+            {
+                //user skipped previous Q: can't do this test
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't check as AGE was not entered");
+                warningBox.ShowDialog();
+
+                return true;
 
 
+
+
+            }
+
+
+            int age = Convert.ToInt32(ageAsStr);
+
+
+            if (years <= age)
+            {
+
+                return true;
+
+            }
+            else
+            {
+
+                return false;
+
+            }
+
+
+        }
 
 
 
@@ -1759,7 +2228,7 @@ namespace BHS_questionnaire_demo
 
                     warningBox.setLabel("Warning: Age is < " + minAge);
                     warningBox.ShowDialog();
-                    
+
                     return false;
 
                 }
@@ -1783,11 +2252,10 @@ namespace BHS_questionnaire_demo
                 months = Convert.ToInt32(match.Groups[2].Value);
                 years = Convert.ToInt32(match.Groups[3].Value);
 
-                
-               
-                //if years or months or days ==0, these are unknown so we can't do this test
-                if (years == 0 || months ==0 || days == 0 )
 
+
+                //if years or months or days ==0, these are unknown so we can't do this test
+                if (years == 0 || months == 0 || days == 0)
                 {
 
                     //show a warning
@@ -1796,8 +2264,8 @@ namespace BHS_questionnaire_demo
 
                     warningBox.setLabel("Warning: Can't check that DOB matches age as some parts of age (day, month or year) are not known");
                     warningBox.ShowDialog();
-                    
-                    
+
+
                     return true;
                 }
 
@@ -1828,7 +2296,7 @@ namespace BHS_questionnaire_demo
 
             if (today < dobThisYear)
             {
-                
+
                 //today is before birthday
                 age -= 1;
 
@@ -1885,10 +2353,359 @@ namespace BHS_questionnaire_demo
         }
 
 
+        private bool testUncertainDOBmatchesAge(string userData)
+        {
+
+            //in this version, we may have uncertainty in the days and/or months, but we assume years are known for sure
+
+            string dobAsStr = getGS().Get("DOB");
+            DateTime today = DateTime.Now;
+            int userAge = Convert.ToInt32(userData);
+
+
+
+            if (dobAsStr == null)
+            {
+                //user skipped previous Q: can't do this test
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't check that DOB matches age as DOB was not entered");
+                warningBox.ShowDialog();
+
+
+                return true;
+
+
+            }
+
+            
+
+            //extract the day, months, years.
+            Match match = Regex.Match(dobAsStr, @"(\d+)/(\d+)/(\d+)");
+
+            int days, months, years;
+
+            if (match.Success)
+            {
+                days = Convert.ToInt32(match.Groups[1].Value);
+                months = Convert.ToInt32(match.Groups[2].Value);
+                years = Convert.ToInt32(match.Groups[3].Value);
+
+
+
+                //if years or months or days ==0, these are unknown so we can't do this test
+                if (years == 0 )
+                {
+
+                    //show a warning: 
+
+                    Form3 warningBox = getQM().getWarningBox();
+
+                    warningBox.setLabel("Warning: Can't check that DOB matches age as Year is not known");
+                    warningBox.ShowDialog();
+
+
+                    return true;
+                }
+
+
+                //are all days/months/years known?
+                if ((days != 0) && (months != 0))
+                {
+                    //nothing is unknown, so can use normal method
+
+                    return testDOBmatchesAge(userData);
+
+
+                }
+                else
+                {
+                    //some unknowns
+                    return testUncertainDOBmatchesAge2(days, months, years, userAge, today);
+
+                }
+
+
+
+            }
+            else
+            {
+                throw new Exception("date parsing failed");
+
+            }
+
+
+        }
+
+
+        private bool testUncertainDOBmatchesAge2(int days, int months, int years, int userAge, DateTime today)
+        {
+
+            //are the months unknown?
+
+            int days1;      //days for lower-bound
+            int days2;      //days for upper bound
+            int months1;    //months for lower bound
+            int months2;    //months for upper bound
+           
+
+            if (months == 0)
+            {
+
+                //we know the years but not the months
+
+                //find lower bound date
+                
+                months1 = 1;    //Jan
+                days1 = 1;      //first of Jan
+                
+
+                //find upper bound date
+                
+                months2 = 12;   //Dec
+                days2 = 31;     //last day of December
+
+                //if either upper or lower bound is consistent then we allow it
+                if (testUncertainDOBmatchesAge3(days1, months1, years, userAge, today) || testUncertainDOBmatchesAge3(days2, months2, years, userAge, today))
+                {
+
+                    return true;
+
+
+                }
+                else
+                {
+
+                    return false;
+                }
+
+
+
+            }
+            else
+            {
+                //must be days are unknown
+                //use the first and last days of this month
+                days1 = 1;
+                days2 = DateTime.DaysInMonth(years, months);
+
+                //if either upper or lower bound is consistent then we allow it
+                if (testUncertainDOBmatchesAge3(days1, months, years, userAge, today) || testUncertainDOBmatchesAge3(days2, months, years, userAge, today))
+                {
+
+                    return true;
+
+
+                }
+                else
+                {
+
+                    return false;
+                }
+
+
+
+
+            }
+
+
+
+
+
+        }
+
+
+        private bool testUncertainDOBmatchesAge3(int days, int months, int years, int userAge, DateTime today)
+        {
+
+            //is this date consistent with age
+            //subtract the year part of the current date from the year part of the dob
+
+            int age = today.Year - years;
+
+            //this will give the maximum possible age in years:
+            //if today is before the birthday then we subtract 1
+
+            //what date is the birthday this year ?
+
+            DateTime dobThisYear = new DateTime(today.Year, months, days);
+
+            if (today < dobThisYear)
+            {
+
+                //today is before birthday
+                age -= 1;
+
+
+            }
+
+            //compare age based on todays date and the previously entered dob with the age the user entered
+
+            if (age == userAge)
+            {
+                return true;
+
+            }
+            else
+            {
+                return false;
+
+            }
+
+
+
+
+
+
+        }
+
+
+
+        private bool testDOBmatchesAge(string userData)
+        {
+            //is this age consistent with the previously entered Date of Birth
+            string dobAsStr = getGS().Get("DOB");
+
+            if (dobAsStr == null)
+            {
+                //user skipped previous Q: can't do this test
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't check that DOB matches age as DOB was not entered");
+                warningBox.ShowDialog();
+
+
+                return true;
+
+
+            }
+
+            DateTime today = DateTime.Now;
+            DateTime dob;
+
+            //extract the day, months, years.
+            Match match = Regex.Match(dobAsStr, @"(\d+)/(\d+)/(\d+)");
+
+            int days, months, years;
+
+            if (match.Success)
+            {
+                days = Convert.ToInt32(match.Groups[1].Value);
+                months = Convert.ToInt32(match.Groups[2].Value);
+                years = Convert.ToInt32(match.Groups[3].Value);
+
+
+
+                //if years or months or days ==0, these are unknown so we can't do this test
+                if (years == 0 || months == 0 || days == 0)
+                {
+
+                    //show a warning
+
+                    Form3 warningBox = getQM().getWarningBox();
+
+                    warningBox.setLabel("Warning: Can't check that DOB matches age as some parts of age (day, month or year) are not known");
+                    warningBox.ShowDialog();
+
+
+                    return true;
+                }
+
+
+
+                dob = new DateTime(years, months, days);
+
+
+
+            }
+            else
+            {
+                throw new Exception("date parsing failed");
+
+            }
+
+
+            //subtract the year part of the current date from the year part of the dob
+
+            int age = today.Year - years;
+
+            //this will give the maximum possible age in years:
+            //if today is before the birthday then we subtract 1
+
+            //what date is the birthday this year ?
+
+            DateTime dobThisYear = new DateTime(today.Year, months, days);
+
+            if (today < dobThisYear)
+            {
+
+                //today is before birthday
+                age -= 1;
+
+
+            }
+
+            //compare age based on todays date and the previously entered dob with the age the user entered
+
+            if (age == Convert.ToInt32(userData))
+            {
+                return true;
+
+            }
+            else
+            {
+                return false;
+
+            }
+
+
+
+        }
+
+
+
+        private bool TestYear(string userData)
+        {
+            //true if a 4-digit number
+            if (userData.Length == 4)
+            {
+
+                try
+                {
+
+                    int year = Convert.ToInt32(userData);
+                    return true;
+
+
+                }
+                catch
+                {
+                    return false;
+
+                }
+
+
+            }
+            else
+            {
+
+                return false;
+
+            }
+
+        }
+
+
         private bool testLessThan(string userData, int testVal)
         {
 
-            
+
 
             //is this a number ?
 
@@ -1991,7 +2808,7 @@ namespace BHS_questionnaire_demo
 
             }
 
-            if ((num > start) && (num <= stop))
+            if ((num >= start) && (num <= stop))
             {
                 //OK
                 return true;
@@ -2015,22 +2832,22 @@ namespace BHS_questionnaire_demo
         private bool TestNoNumbers(string userData)
         {
             //does this contain any numbers ?
-             Match match = Regex.Match(userData, @"\d");
+            Match match = Regex.Match(userData, @"\d");
 
 
-             if (match.Success)
-             {
-                 //contains at least 1 number
-                 return false;
+            if (match.Success)
+            {
+                //contains at least 1 number
+                return false;
 
-             }
-             else
-             {
-                 return true;
+            }
+            else
+            {
+                return true;
 
 
-             }
-            
+            }
+
 
 
 
@@ -2082,6 +2899,67 @@ namespace BHS_questionnaire_demo
 
         }
 
+        private bool TestValueGreaterThan(string userData, String targetQ)
+        {
+            //true if this value >= a previous value (target)
+
+            string targetV = getGS().Get(targetQ);
+
+            if (targetV == null)
+            {
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't compare with " + targetQ + "as no value was entered");
+                warningBox.ShowDialog();
+
+                return true;
+
+            }
+            else
+            {
+                //convert to int
+                try
+                {
+
+                    int thisVal = Convert.ToInt32(userData);
+                    int targetVal = Convert.ToInt32(targetV);
+
+                    if (thisVal >= targetVal)
+                    {
+                        return true;
+
+
+                    }
+                    else
+                    {
+
+                        return false;
+
+                    }
+
+
+                }
+                catch
+                {
+                    return false;
+
+                }
+
+
+
+
+            }
+
+
+
+
+
+        }
+
+
+
+
         private void calcBMI(String userData)
         {
 
@@ -2102,14 +2980,14 @@ namespace BHS_questionnaire_demo
                 //save the BMI in the special store
                 getSD().Add("BMI", bmi.ToString());
 
-                
+
 
             }
             else
             {
                 //some data not present
 
-                
+
 
                 Form3 warningBox = getQM().getWarningBox();
 
@@ -2125,7 +3003,45 @@ namespace BHS_questionnaire_demo
 
         }
 
-        
+
+        private string ProcessMHPIspecialAge(string userData)
+        {
+            int age;
+
+            try
+            {
+                age = Convert.ToInt32(userData);
+
+                if (age >= 18)
+                {
+                    return "CON2";
+
+                }
+                else
+                {
+                    return "CON3";
+
+
+                }
+
+
+            }
+            catch
+            {
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't process Age as not a number");
+                warningBox.ShowDialog();
+
+
+                return ToCode;
+
+            }
+
+
+        }
+
+
 
         private bool testCheckAgeSameAsOrLessThanAGE(string userData)
         {
@@ -2164,6 +3080,154 @@ namespace BHS_questionnaire_demo
                 //these differ
                 return false;
 
+
+            }
+
+
+
+
+
+        }
+
+        private void ConvertToGrams(string weightKgStr)
+        {
+
+            decimal weightKg = Convert.ToDecimal(weightKgStr);
+            decimal weightG = weightKg * 1000;
+
+            //save this as the same Code, but with _GRAMS appended
+            getSD().Add(Code + "_GRAMS", weightG.ToString());
+
+
+
+
+        }
+
+
+        private string TestBabyUltrasound(string userData, string fromCode)
+        {
+
+            decimal gestAge;
+
+            try
+            {
+                gestAge = Convert.ToDecimal(userData);
+
+                if ((gestAge < 10m) || (gestAge > 60m))
+                {
+
+                    Form1 mainForm = getQM().getMainForm();
+                    ConfirmForm confirmBox = getQM().getConfirmBox();
+                    string confLabel = "The gestational age is unusual (" + userData + "). Is this correct ?";
+                    confirmBox.setFormLabel(confLabel, mainForm);
+                    confirmBox.ShowDialog();
+
+                    //the confirmbox calls back to the mainForm which button was pressed
+                    string buttonResult = mainForm.confirmResult;
+
+                    if (buttonResult == "yes")
+                    {
+                       
+
+                        //alert data manager.
+
+                        getSD().Add("DATA_MANAGER_REVIEW_GESTATIONAL_AGE", userData);
+
+                        return ToCode;
+
+
+
+                    }
+                    else
+                    {
+                        //let them correct data
+                        return fromCode;
+
+                    }
+
+
+                }
+                else
+                {
+                    //OK
+                    return ToCode;
+
+
+                }
+
+            }
+            catch (FormatException e)
+            {
+
+                return fromCode;
+
+            }
+
+
+        }
+
+
+
+
+        private string TestBabyWeight(string userData, string fromCode)
+        {
+
+            decimal weight;
+
+            try
+            {
+                weight = Convert.ToDecimal(userData);
+
+                if ((weight < 0.3m) || (weight > 8))
+                {
+
+                    Form1 mainForm = getQM().getMainForm();
+                    ConfirmForm confirmBox = getQM().getConfirmBox();
+                    string confLabel = "The Weight is unusual (" + userData + "). Is this correct ?";
+                    confirmBox.setFormLabel(confLabel, mainForm);
+                    confirmBox.ShowDialog();
+
+                    //the confirmbox calls back to the mainForm which button was pressed
+                    string buttonResult = mainForm.confirmResult;
+
+
+
+                    //if (MessageBox.Show("The weight is unusal (" + userData + "). Is this correct ?", "Please Check:", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (buttonResult == "yes")
+                    {
+                        // a 'DialogResult.Yes' value was returned from the MessageBox
+
+                        //alert data manager.
+
+                        getSD().Add("DATA_MANAGER_REVIEW_BABY_WEIGHT", userData);
+
+                        return ToCode;
+
+
+
+                    }
+                    else
+                    {
+
+                        return fromCode;
+
+
+                    }
+                    
+
+                }
+                else
+                {
+
+                    return ToCode;
+
+                }
+
+            }
+            catch (FormatException e)
+            {
+
+                return fromCode;
 
             }
 

@@ -2672,7 +2672,7 @@ namespace BHS_questionnaire_demo
             }
             catch
             {
-                errorBox.setLabel("Error: Could not load config file");
+                errorBox.setLabel("Error: Could not load config file at path:" + configFilePath + " for attribute:" + attrName);
                 errorBox.ShowDialog();
                 return null;
 

@@ -42,13 +42,16 @@ namespace BHS_questionnaire_demo
 
         public List<Option> langs { get; set; }
 
+        //site codes
+        public List<Option> sites { get; set; }
+
 
         public Country(string name)
         {
             this.name = name;
             tribes = new List<Option>();
             langs = new List<Option>();
-
+            sites = new List<Option>();
 
 
         }
@@ -68,7 +71,13 @@ namespace BHS_questionnaire_demo
         }
 
 
+        public void addSite(Option site)
+        {
 
+
+            sites.Add(site);
+
+        }
 
 
 

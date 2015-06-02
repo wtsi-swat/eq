@@ -146,6 +146,7 @@
     <Compile Include="QuestionGetTime.cs" />
     <Compile Include="QuestionLabel.cs" />
     <Compile Include="QuestionManager.cs" />
+    <Compile Include="QuestionMultiSelect.cs" />
     <Compile Include="QuestionRadio.cs" />
     <Compile Include="QuestionRadioDynamicLabel.cs" />
     <Compile Include="QuestionRank.cs" />

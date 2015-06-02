@@ -63,7 +63,10 @@ namespace BHS_questionnaire_demo
         //the data the user entered, which may be different to the processed data
         //private string userData;
 
-        private string[] months= { "Don't Know", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+        private string[] months2 = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+        private string[] months = { "Don't Know", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
+
 
         private Dictionary<string, int> monthMap;
 
@@ -76,8 +79,8 @@ namespace BHS_questionnaire_demo
             : base(form, bigMessageBox, gs, specialDataStore, qm)
         {
 
-           
-            
+
+
             //mapping from month as int to month as string
             monthMap = new Dictionary<string, int>();
 
@@ -88,17 +91,14 @@ namespace BHS_questionnaire_demo
 
             }
 
-
-
-
-
+            
 
         }
 
 
 
         //methods
-       
+
 
 
         public override void save(TextWriter dhProcessedData, TextWriter dhUserData)
@@ -107,7 +107,7 @@ namespace BHS_questionnaire_demo
             //call the base method save to save the processed data
             save(dhProcessedData);
 
-            
+
 
 
 
@@ -117,7 +117,7 @@ namespace BHS_questionnaire_demo
             //load the processed data via the base class
             load(pDataDict);
 
-            
+
 
 
         }
@@ -133,7 +133,7 @@ namespace BHS_questionnaire_demo
             getQM().getPanel().Controls.Remove(selectDays);
             getQM().getPanel().Controls.Remove(selectMonths);
             getQM().getPanel().Controls.Remove(selectYears);
-            
+
 
 
             label.Dispose();
@@ -144,7 +144,7 @@ namespace BHS_questionnaire_demo
             selectMonths.Dispose();
             selectYears.Dispose();
 
-            
+
 
 
 
@@ -154,9 +154,37 @@ namespace BHS_questionnaire_demo
         public override void configureControls(UserDirection direction)
         {
 
+
+            //do we want to show the skip controls?
+            if (NoAnswerDontKnowNotApplicable)
+            {
+                //yes
+                //turn the skip controls on again
+                getQM().getMainForm().setSkipControlsVisible();
+
+
+            }
+            else
+            {
+                //turn off the skip controls
+                getQM().getMainForm().setSkipControlsInvisible();
+
+
+            }
+
+            //do we want to hide a specific skip control?
+            if (HideSkipControl != null)
+            {
+
+                getQM().getMainForm().setSpecificSkipControlInvisible(HideSkipControl);
+
+            }
+
+
+
             //direction is either 'forward' or 'reverse'
             //turn the skip controls on again
-            getQM().getMainForm().setSkipControlsVisible();
+            //getQM().getMainForm().setSkipControlsVisible();
 
 
             //create a label 
@@ -176,8 +204,8 @@ namespace BHS_questionnaire_demo
             //label.AutoSize = true;
             label.Size = new Size(getWidgetWidth(), getWidgetHeight());
 
-            int yPosDateLabel= labelYpos + getWidgetHeight();
-            
+            int yPosDateLabel = labelYpos + getWidgetHeight();
+
 
             //labels for days, months, years
             labelDays = new Label();
@@ -237,7 +265,7 @@ namespace BHS_questionnaire_demo
             //selectDays.Location = new Point(labelXpos + 90, yPosSelect);
             selectDays.Size = new Size(160, 20);
 
-            
+
 
             selectMonths.Location = new Point(labelXpos + 170, yPosSelect);
             selectMonths.Size = new Size(160, 20);
@@ -263,31 +291,74 @@ namespace BHS_questionnaire_demo
 
 
             //array of days
-            string[] days = new string[32];
-
-            days[0] = "Don't Know";
+            string[] days = null;
 
             
-            for (int i = 1; i <= 31; i++)
+
+            if (ShowDaysDontKnow)
             {
-                days[i] = i.ToString();
+
+                days = new string[32];
+                days[0] = "Don't Know";
+                
+                for (int i = 1; i <= 31; i++)
+                {
+                    days[i] = i.ToString();
+
+                }
+
 
             }
+            else
+            {
+                //leave out Don't know
+
+                days = new string[31];
+                for (int i = 0; i <= 30; i++)
+                {
+                    days[i] = (i + 1).ToString();
+
+                }
+
+
+            }
+
+            
+
+            
             selectDays.Items.AddRange(days);
 
 
             //array of months
-           
+            if (ShowMonthsDontKnow)
+            {
+                //include "don't know"
+                selectMonths.Items.AddRange(months);
 
-            selectMonths.Items.AddRange(months);
+
+            }
+            else
+            {
+                //leave out don't know
+                selectMonths.Items.AddRange(months2);
+
+            }
+
+
+            //selectMonths.Items.AddRange(months);
             selectMonths.IntegralHeight = false;
             selectMonths.MaxDropDownItems = 5;
 
             //get the current year.
-            int currentYear= DateTime.Now.Year;
+            int currentYear = DateTime.Now.Year;
 
             //first year should also be don't know
-            selectYears.Items.Add("Don't Know");
+            if (ShowYearsDontKnow)
+            {
+                selectYears.Items.Add("Don't Know");
+
+            }
+            
 
 
             //special case TestEDD: only allow the current and next year (expected delivery date for preg)
@@ -300,10 +371,22 @@ namespace BHS_questionnaire_demo
 
 
             }
+            else if(StartYear == 0)
+            {
+                //normal
+                for (int i = currentYear; i >= 1900; i--)
+                {
+                    selectYears.Items.Add(i);
+
+
+                }
+
+
+            }
             else
             {
-
-                for (int i = currentYear; i >= 1900; i--)
+                //show only from current year to start year
+                for (int i = currentYear; i >= StartYear; i--)
                 {
                     selectYears.Items.Add(i);
 
@@ -314,7 +397,7 @@ namespace BHS_questionnaire_demo
             }
 
 
-           
+
 
 
 
@@ -355,7 +438,7 @@ namespace BHS_questionnaire_demo
 
                         if (pYears == "0")
                         {
-                            
+
                             selectYears.SelectedItem = "Don't Know";
                         }
                         else
@@ -365,11 +448,11 @@ namespace BHS_questionnaire_demo
 
                         }
 
-                        
 
-                        
 
-                        
+
+
+
 
 
                         //set the selected items in the combo boxes
@@ -377,16 +460,16 @@ namespace BHS_questionnaire_demo
 
 
                     }
-                    
+
 
 
 
 
 
                 }
-               
 
-                
+
+
 
             }
 
@@ -423,9 +506,9 @@ namespace BHS_questionnaire_demo
                 //if (processedData == null)
                 //{
 
-                    processedData = skipSetting;
+                processedData = skipSetting;
 
-               // }
+                // }
 
                 return ToCode;
 
@@ -492,14 +575,15 @@ namespace BHS_questionnaire_demo
             //check if this date is valid
             if ((selectedDays != "Don't Know") && (selectedMonths != "Don't Know") && (selectedYears != "Don't Know"))
             {
-                
+
                 try
                 {
 
                     DateTime dt = new DateTime(selectedYearInt, selectedMonthsInt, selectedDayInt);
 
                 }
-                catch(ArgumentOutOfRangeException e){
+                catch (ArgumentOutOfRangeException e)
+                {
 
                     //an invalid date was entered
                     ((Form2)getBigMessageBox()).setLabel("You must choose a valid date");
@@ -509,15 +593,16 @@ namespace BHS_questionnaire_demo
 
 
                 }
-                
-                
+
+
 
             }
 
             if (Validation == "CheckOver18")
             {
-                
-                if(! isOverAge(selectedDayInt, selectedMonthsInt, selectedYearInt, 18)){
+
+                if (!isOverAge(selectedDayInt, selectedMonthsInt, selectedYearInt, 18))
+                {
 
                     //not vover 18
                     ((Form2)getBigMessageBox()).setLabel("You are under 18");
@@ -535,13 +620,162 @@ namespace BHS_questionnaire_demo
                         return Code;
                     }
 
-                    
+
 
 
 
                 }
-                
-                
+
+
+            }
+
+            else if (Validation.StartsWith("CheckThisDateAfterDate::"))
+            {
+
+                string otherDateQ = Validation.Substring(24);
+
+                //fetch the date to compare with
+                string otherDate = getGS().Get(otherDateQ);
+
+                if (otherDate == null)
+                {
+                    Form3 warningBox = getQM().getWarningBox();
+
+                    warningBox.setLabel("Warning: Can't compare with previous date: " + otherDateQ + " as that question has not been answered");
+                    warningBox.ShowDialog();
+
+
+                }
+                else
+                {
+
+                    Match match = Regex.Match(otherDate, @"(\d+)/(\d+)/(\d+)");
+
+                    int daysOther;
+                    int monthsOther;
+                    int yearsOther;
+
+                    if (match.Success)
+                    {
+
+                        daysOther = Convert.ToInt32(match.Groups[1].Value);
+                        monthsOther = Convert.ToInt32(match.Groups[2].Value);
+                        yearsOther = Convert.ToInt32(match.Groups[3].Value);
+
+                        if (!isFirstDateBeforeSecondDate(daysOther, monthsOther, yearsOther, selectedDayInt, selectedMonthsInt, selectedYearInt))
+                        {
+                            //error
+                            ((Form2)getBigMessageBox()).setLabel("This date is before the date from: " + otherDateQ);
+                            getBigMessageBox().ShowDialog();
+
+                            return Code;
+
+
+
+                        }
+
+
+
+
+                    }
+                    else
+                    {
+                        throw new Exception("date parsing failed");
+
+                    }
+
+
+                }
+
+
+
+            }
+
+            else if(Validation == "CheckAtLeast3MonthsBeforeDENT"){
+
+                if (!isAtLeast3MonthsBeforeDENT(selectedDayInt, selectedMonthsInt, selectedYearInt))
+                {
+                    //failed
+
+                    //was this asked before?
+                    if (getNumTimesShown() > 1)
+                    {
+
+                        //alert data-manager
+                        getSD().Add("DATA_MANAGER_ALERT_POH10", selectedDayInt + "/" + selectedMonthsInt + "/" + selectedYearInt);
+                        
+
+                    }
+                    else
+                    {
+                        //show warning:
+
+                        Form3 warningBox = getQM().getWarningBox();
+
+                        warningBox.setLabel("Please confirm this date");
+                        warningBox.ShowDialog();
+
+                        return Code;
+                        
+                    }
+
+                }
+
+            }
+
+
+            else if (Validation.StartsWith("CheckNoMoreThan1MonthBeforeDENT::"))
+            {
+
+                if (! isNotMoreThan1MonthBeforeDENT(selectedDayInt, selectedMonthsInt, selectedYearInt))
+                {
+                    //failed
+
+                    //alert data-manager
+                    getSD().Add("DATA_MANAGER_ALERT_" + Validation.Substring(33), selectedDayInt + "/" + selectedMonthsInt + "/" + selectedYearInt);
+
+                }
+
+            }
+
+
+
+
+            else if (Validation == "CalcTimeSinceLastPeriod")
+            {
+                int elapsedWeeks;
+
+                if (! CalcTimeSinceLastPeriod(selectedDayInt, selectedMonthsInt, selectedYearInt, out elapsedWeeks))
+                {
+
+                    //failed
+                    if (getNumTimesShown() > 1)
+                    {
+
+                        //alert data-manager
+                        getSD().Add("DATA_MANAGER_ALERT_LNMP", elapsedWeeks.ToString());
+
+
+                    }
+                    else
+                    {
+                        //show warning:
+
+                        Form3 warningBox = getQM().getWarningBox();
+
+                        warningBox.setLabel("Please confirm this date");
+                        warningBox.ShowDialog();
+
+                        return Code;
+
+                    }
+
+
+
+                }
+
+
+
             }
 
             else if (Validation == "CheckOver13")
@@ -585,7 +819,7 @@ namespace BHS_questionnaire_demo
                 if (!isBeforeOrOnCurrentDay(selectedDayInt, selectedMonthsInt, selectedYearInt))
                 {
 
-                    //not vover 18
+
                     ((Form2)getBigMessageBox()).setLabel("This date is after today");
                     getBigMessageBox().ShowDialog();
 
@@ -604,7 +838,7 @@ namespace BHS_questionnaire_demo
                 if (!isAfterOrOnCurrentDay(selectedDayInt, selectedMonthsInt, selectedYearInt))
                 {
 
-                    
+
                     ((Form2)getBigMessageBox()).setLabel("This date is before today");
                     getBigMessageBox().ShowDialog();
 
@@ -622,7 +856,7 @@ namespace BHS_questionnaire_demo
                 if (!isConsistentDate(selectedDayInt, selectedMonthsInt, selectedYearInt))
                 {
 
-                    
+
                     ((Form2)getBigMessageBox()).setLabel("This date is inconsistent (before DOB or after today)");
                     getBigMessageBox().ShowDialog();
 
@@ -638,7 +872,7 @@ namespace BHS_questionnaire_demo
             else if (Validation == "HepcDOBcheck")
             {
 
-                if (! hepCageCheck(selectedDayInt, selectedMonthsInt, selectedYearInt))
+                if (!hepCageCheck(selectedDayInt, selectedMonthsInt, selectedYearInt))
                 {
 
 
@@ -655,14 +889,35 @@ namespace BHS_questionnaire_demo
 
             }
 
+            /*
+            if (Process == "CalcTimeSinceLastPeriod")
+            {
+                CalcTimeSinceLastPeriod(selectedDayInt, selectedMonthsInt, selectedYearInt);
 
 
-           
+            }
+             * */
+
+
 
 
 
             //convert to std date format
             processedData = selectedDayInt + "/" + selectedMonthsInt + "/" + selectedYearInt;
+
+
+            if (Process.StartsWith("IfDontKnowFlagDataManager::"))
+            {
+                //if any part of the date is unknown: flag data manager
+                if (selectedDayInt == 0 || selectedMonthsInt == 0 || selectedYearInt == 0)
+                {
+
+                    getSD().Add("DATA_MANAGER_REVIEW_" + Process.Substring(27), processedData);
+                }
+
+
+
+            }
 
 
 
@@ -724,7 +979,7 @@ namespace BHS_questionnaire_demo
 
 
 
-           
+
             //get DOB
             string dobAsStr = getGS().Get("DOB");
 
@@ -745,13 +1000,13 @@ namespace BHS_questionnaire_demo
 
             }
 
-            
+
             DateTime dob;
 
             //extract the day, months, years.
             Match match = Regex.Match(dobAsStr, @"(\d+)/(\d+)/(\d+)");
 
-            
+
 
             if (match.Success)
             {
@@ -814,10 +1069,270 @@ namespace BHS_questionnaire_demo
         }
 
 
+        private bool isAtLeast3MonthsBeforeDENT(int days, int months, int years)
+        {
+            //true if the date is after/on the DOB and before/on the current date
+
+            //check that we don't have any uncertainty in this date
+
+            if (months == 0 || years == 0)
+            {
+
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't validate this date as some part(s) uncertain");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+            }
+
+            int daysToUse;
+            if (days == 0)
+            {
+                //days not known: use the last day in the month
+                daysToUse = DateTime.DaysInMonth(years, months);
+
+            }
+            else
+            {
+
+                daysToUse = days;
+
+            }
+
+            DateTime thisDate = new DateTime(years, months, daysToUse);
+
+           
+            //get DOB
+            string dentAsStr = getGS().Get("DENT");
+
+            if (dentAsStr == null)
+            {
+                //user skipped previous Q: can't do this test
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't check this date against DENT as DENT was not entered");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+
+            }
+
+
+            DateTime dent;
+
+            //extract the day, months, years.
+            Match match = Regex.Match(dentAsStr, @"(\d+)/(\d+)/(\d+)");
+
+            int dentDays;
+            int dentMonths;
+            int dentYears;
+
+            if (match.Success)
+            {
+                dentDays = Convert.ToInt32(match.Groups[1].Value);
+                dentMonths = Convert.ToInt32(match.Groups[2].Value);
+                dentYears = Convert.ToInt32(match.Groups[3].Value);
+
+
+
+                //if years or months or days ==0, these are unknown so we can't do this test
+                if (dentYears == 0 || dentMonths == 0 || dentDays == 0)
+                {
+
+                    //show a warning
+
+                    Form3 warningBox = getQM().getWarningBox();
+
+                    warningBox.setLabel("Warning: Some parts of DENT (day, month or year) are not known");
+                    warningBox.ShowDialog();
+
+
+                    return true;
+                }
+
+
+
+                dent = new DateTime(dentYears, dentMonths, dentDays);
+
+                
+                //to pass test: date must be at least 3 months (90 days) before DENT
+                DateTime dentMinus3m = dent - new TimeSpan(90, 0, 0, 0);
+
+
+
+                if (thisDate < dentMinus3m)
+                {
+
+                    return true;
+
+
+                }
+                else
+                {
+                    return false;
+
+
+
+                }
+
+
+
+            }
+            else
+            {
+                throw new Exception("date parsing failed");
+
+            }
+
+
+
+
+
+
+
+        }
+
+
+
+
+        private bool isNotMoreThan1MonthBeforeDENT(int days, int months, int years)
+        {
+            //true if the date is 1 month before DENT or less
+
+            //check that we don't have any uncertainty in this date
+
+            if (days ==0 || months == 0 || years == 0)
+            {
+
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't validate this date as some part(s) uncertain");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+            }
+
+            
+
+            DateTime thisDate = new DateTime(years, months, days);
+
+
+            
+            string dentAsStr = getGS().Get("DENT");
+
+            if (dentAsStr == null)
+            {
+                //user skipped previous Q: can't do this test
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't check this date against DENT as DENT was not entered");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+
+            }
+
+
+            DateTime dent;
+
+            //extract the day, months, years.
+            Match match = Regex.Match(dentAsStr, @"(\d+)/(\d+)/(\d+)");
+
+            int dentDays;
+            int dentMonths;
+            int dentYears;
+
+            if (match.Success)
+            {
+                dentDays = Convert.ToInt32(match.Groups[1].Value);
+                dentMonths = Convert.ToInt32(match.Groups[2].Value);
+                dentYears = Convert.ToInt32(match.Groups[3].Value);
+
+
+
+                //if years or months or days ==0, these are unknown so we can't do this test
+                if (dentYears == 0 || dentMonths == 0 || dentDays == 0)
+                {
+
+                    //show a warning
+
+                    Form3 warningBox = getQM().getWarningBox();
+
+                    warningBox.setLabel("Warning: Some parts of DENT (day, month or year) are not known");
+                    warningBox.ShowDialog();
+
+
+                    return true;
+                }
+
+
+
+                dent = new DateTime(dentYears, dentMonths, dentDays);
+
+
+                //to pass test: date must no more than 1 month before DENT
+                DateTime dentMinus1m = dent - new TimeSpan(30, 0, 0, 0);
+
+
+
+                if (thisDate >= dentMinus1m)
+                {
+
+                    return true;
+
+
+                }
+                else
+                {
+                    return false;
+
+
+
+                }
+
+
+
+            }
+            else
+            {
+                throw new Exception("date parsing failed");
+
+            }
+
+
+
+
+
+
+
+        }
+
+
         private bool hepCageCheck(int days, int months, int years)
         {
 
-           // If CASE=1 check that participants are 25 years and above. If CASE=2 check that participants are 18 years and above.
+            // If CASE=1 check that participants are 25 years and above. If CASE=2 check that participants are 18 years and above.
 
             string hCase = getGS().Get("CASE");
 
@@ -861,9 +1376,57 @@ namespace BHS_questionnaire_demo
 
         }
 
+        /*
+        private bool isFirstDateBeforeSecondDate(int days1, int months1, int years1, int days2, int months2, int years2)
+        {
+
+            // true if the first date occurs before the second date or both are the same date
+            
+            
+            //check if any parts of either date are unknown, i.e. set as 0
+
+            if (days1 == 0 || months1 == 0 || years1 == 0 || days2 == 0 || months2 == 0 || years2 == 0)
+            {
+
+
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't compare dates as some information uncertain");
+                warningBox.ShowDialog();
+
+                return true;
+
+
+            }
+
+
+            //convert to date objects
+            DateTime date1 = new DateTime(years1, months1, days1);
+            DateTime date2 = new DateTime(years2, months2, days2);
+
+            if (date1 <= date2)
+            {
+
+                return true;
+            }
+            else
+            {
+
+                return false;
+
+
+            }
 
 
 
+
+
+
+        }
+
+        */
 
 
 
@@ -876,7 +1439,7 @@ namespace BHS_questionnaire_demo
 
             if (days == 0 || months == 0 || years == 0)
             {
-                
+
 
                 //show a warning
 
@@ -936,8 +1499,8 @@ namespace BHS_questionnaire_demo
         {
 
             //true if the date is before or on the current date
-            
-            
+
+
             //if any of these are 0 we can't do this test, i.e. data uncertain
 
             if (days == 0 || months == 0 || years == 0)
@@ -974,20 +1537,82 @@ namespace BHS_questionnaire_demo
 
             }
 
-          
+
 
         }
 
 
-    
+        private bool CalcTimeSinceLastPeriod(int days, int months, int years, out int elapsedWeeks)
+        {
+
+            //find elapsed time since this date and the current date
+
+            //check for unknown parts
+            if (days == 0 || months == 0 || years == 0)
+            {
 
 
-    private bool isAfterOrOnCurrentDay(int days, int months, int years)
+                //show a warning
+
+                Form3 warningBox = getQM().getWarningBox();
+
+                warningBox.setLabel("Warning: Can't calculate time since last period as date uncertain");
+                warningBox.ShowDialog();
+
+                elapsedWeeks = 0;
+
+                return true;
+
+
+            }
+
+
+            DateTime today = DateTime.Now.Date;
+
+
+            DateTime periodDate = new DateTime(years, months, days);
+
+            //calc diff
+
+            TimeSpan timeSincePeriod = today - periodDate;
+
+            int elapsedDays = timeSincePeriod.Days;
+
+            elapsedWeeks = elapsedDays / 7;
+
+            int remainingDays= elapsedDays - (7 * elapsedWeeks);
+
+            //save
+            getSD().Add("LNMWKS", "" + elapsedWeeks + "," + remainingDays);
+
+            if (elapsedWeeks < 12)
+            {
+                return false;
+
+
+            }
+            else
+            {
+                return true;
+
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+        private bool isAfterOrOnCurrentDay(int days, int months, int years)
         {
 
             //true if the date is After or on the current date
-            
-            
+
+
             //if any of these are 0 we can't do this test, i.e. data uncertain
 
             if (days == 0 || months == 0 || years == 0)
@@ -1008,7 +1633,7 @@ namespace BHS_questionnaire_demo
 
             DateTime today = DateTime.Now.Date;
 
-           
+
             DateTime thisDate = new DateTime(years, months, days);
 
             if (thisDate >= today)
@@ -1025,7 +1650,7 @@ namespace BHS_questionnaire_demo
 
             }
 
-          
+
 
         }
 

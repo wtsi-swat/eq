@@ -155,6 +155,14 @@ namespace BHS_questionnaire_demo
             textbox1 = new TextBox();
             textbox2 = new TextBox();
 
+            if (MaxLength > 0)
+            {
+                textbox1.MaxLength = MaxLength;
+                textbox2.MaxLength = MaxLength;
+
+
+            }
+
             //trap any keypress to deselect the skip-controls
             textbox1.KeyPress += new KeyPressEventHandler(button_click);
             textbox2.KeyPress += new KeyPressEventHandler(button_click);
@@ -186,7 +194,8 @@ namespace BHS_questionnaire_demo
             //box 1 label
             box1Label.Location = new Point(labelXpos, labelYpos + 50);
             box1Label.Size = new Size(200, 50);
-            box1Label.Text = "First Entry";
+            //box1Label.Text = "First Entry";
+            box1Label.Text = "Reading";
 
 
 
@@ -197,7 +206,8 @@ namespace BHS_questionnaire_demo
             //box2 label
             box2Label.Location = new Point(labelXpos, labelYpos + 100);
             box2Label.Size = new Size(200, 50);
-            box2Label.Text = "Second Entry";
+            //box2Label.Text = "Second Entry";
+            box2Label.Text = "Confirm Reading";
 
 
             //position of the second textbox
